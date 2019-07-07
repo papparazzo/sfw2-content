@@ -1,5 +1,5 @@
 {
-    "name": "sfw2/menu",
+    "name": "sfw2/content",
     "type": "library",
     "license": "GNU AFFERO GENERAL PUBLIC LICENSE Version 3",
 
@@ -8,7 +8,7 @@
     },
     "autoload": {
         "psr-4": {
-            "SFW2\\Menu\\": "src/"
+            "SFW2\\Content\\": "src/"
         }
     }
 }

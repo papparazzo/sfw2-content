@@ -1,0 +1,23 @@
+<li class="media my-4" id="{{id}}">
+    <img style="width: 75px;" class="rounded mr-3" src="{{image}}" alt="Autor">
+    <div class="media-body" style="border-left: 1px solid #929292; padding-left: 12px;">
+        <h4 id="title_{{id}}" style="font-weight: bolder;" class="mt-0 mb-1">{{title}}</h4>
+        <small style="font-style: italic;">
+            <div>Ressort {{resname}}</div>
+            <div>Erstellt von {{{mailaddr}}} am {{date}}</div>
+        </small>
+        <div style="margin-top: 0.25rem;">{{{content}}}</div>
+    </div>
+    {{#if deleteAllowed}}
+    <button
+        type="button"
+        class="btn btn-danger btn-sm"
+        data-toggle="modal"
+        data-target="#deleteDialogModal"
+        data-item-del-url="{{delurl}}"
+        data-item-id="{{id}}"
+    >
+        löschen
+    </button>
+    {{/if}}
+</li>
