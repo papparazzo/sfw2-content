@@ -65,12 +65,11 @@ class EditableContent extends AbstractController {
         $content->appendJSFile('crud.js');
         $content->appendJSFile('contenteditable.js');
         $content->assign('title', $this->title);
+        $this->setContent($content);
         return $content;
     }
 
-    public function read($all = false) {
-        unset($all);
-        $content = new Content('content');
+    protected function setContent(Content $content) {
         $stmt =
             "SELECT `content`.`Id`, `CreationDate`, `user`.`FirstName`, `user`.`LastName`, `Email`, `Content` " .
             "FROM `{TABLE_PREFIX}_content` AS `content` " .
@@ -79,20 +78,13 @@ class EditableContent extends AbstractController {
             "ORDER BY `Id` DESC ";
 
         $row = $this->database->selectRow($stmt, [$this->pathId]);
-        $entries = [];
         if(!empty($row) && !empty($row['Content'])) {
-            $entry = [];
-            $entry['content'] = $row['Content'];
-            $entry['date'   ] = $this->getShortDate($row['CreationDate']);
-            $entry['author' ] = $this->getShortName($row);
-            $entry['id'     ] = $row['Id'];
-            $entries[] = $entry;
+            $content->assign('content', $row['Content']);
+            $content->assign('date',    $this->getShortDate($row['CreationDate']));
+            $content->assign('author',  $this->getShortName($row));
+        } else {
+            $content->assign('content', '');
         }
-
-        $content->assign('offset', 0);
-        $content->assign('hasNext', false);
-        $content->assign('entries', $entries);
-        return $content;
     }
 
     public function delete($all = false) {
@@ -100,16 +92,10 @@ class EditableContent extends AbstractController {
         if($entryId === false) {
             throw new ResolverException("invalid data given", ResolverException::INVALID_DATA_GIVEN);
         }
-        $stmt =
-            "DELETE ".
-            "FROM `{TABLE_PREFIX}_content` " .
-            "WHERE `Id` = '%s' " .
-            "AND `PathId` = '%s'";
+        $stmt = "DELETE FROM `{TABLE_PREFIX}_content` WHERE `Id` = '%s' AND `PathId` = '%s'";
 
         if(!$all) {
-            $stmt .=
-                "AND `UserId` = '" .
-                $this->database->escape($this->user->getUserId()) . "'";
+            $stmt .= "AND `UserId` = '" . $this->database->escape($this->user->getUserId()) . "'";
         }
         if(!$this->database->delete($stmt, [$entryId, $this->pathId])) {
             throw new ResolverException("no entry found", ResolverException::NO_PERMISSION);
@@ -135,20 +121,11 @@ class EditableContent extends AbstractController {
             return $content;
         }
 
-        $stmt =
-            "INSERT INTO `{TABLE_PREFIX}_content` " .
-            "SET `PathId` = '%s', ".
-            "`CreationDate` = NOW(), " .
-            "`UserId` = %d, " .
-            "`Content` = '%s' ";
+        $stmt = "INSERT INTO `{TABLE_PREFIX}_content` SET `PathId` = '%s', `CreationDate` = NOW(), `UserId` = %d, `Content` = '%s' ";
 
         $id = $this->database->insert(
             $stmt,
-            [
-                $this->pathId,
-                $this->user->getUserId(),
-                $values['content']['value']
-            ]
+            [$this->pathId, $this->user->getUserId(), $values['content']['value']]
         );
         $content->assign('date',     ['value' => $this->getShortDate()]);
         $content->assign('author',   ['value' => $this->getEMailByUser($this->user, $this->title)]);
