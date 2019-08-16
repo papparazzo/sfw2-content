@@ -63,7 +63,7 @@ class Blog extends AbstractController {
     public function index($all = false) {
         unset($all);
         $content = new Content('SFW2\\Content\\Blog');
-        $content->appendJSFile('blog.handlebars.js');
+        $content->appendJSFile('Blog.handlebars.js');
         $content->appendJSFile('crud.js');
         $content->assign('divisions', $this->getDivisions());
         $content->assign('title', (string)$this->title);
@@ -71,7 +71,7 @@ class Blog extends AbstractController {
     }
 
     public function read($all = false) {
-        $content = new Content('blog');
+        $content = new Content('Blog');
         $entries = [];
 
         $count = (int)filter_input(INPUT_GET, 'count', FILTER_VALIDATE_INT);
@@ -146,7 +146,7 @@ class Blog extends AbstractController {
     }
 
     public function create() {
-        $content = new Content('blog');
+        $content = new Content('Blog');
 
         $rulset = [
             'title' => ['isNotEmpty'],
