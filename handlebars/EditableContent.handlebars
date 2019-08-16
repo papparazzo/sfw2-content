@@ -1,0 +1,39 @@
+<div id="{{id}}">
+    <h1 id="{{formid}}_title_{{id}}">{{{title}}}</h1>
+    <div class="mt-3">
+        {{#if content}}
+        <span id="{{formid}}_content_{{id}}">{{{content}}}</span>
+        <div class="modificationDate mt-5">
+            <small class="blogheader">
+                Erstellt von {{{author}}} am <time pubdate="pubdate">{{date}}</time>
+            </small>
+        </div>
+        {{else}}
+        <span id="{{formid}}_content_{{id}}"></span>
+        <div class="alert alert-info mt-5" role="alert"><strong>Anmerkung:</strong><p>Im Moment gibt's nichts Neues zu berichten!</p></div>
+        {{/if}}
+    </div>
+    {{#if updateAllowed}}
+    <button
+        type="button"
+        class="btn btn-success btn-sm mt-3 mb-3"
+        data-toggle="modal"
+        data-target="#createDialogModal"
+        data-url="{{url}}"
+        data-item-id="{{id}}"
+        data-form-id="{{formid}}"
+    >bearbeiten</button>
+    {{/if}}
+    {{#if deleteAllowed}}
+    {{#if content}}
+    <button
+        type="button"
+        class="btn btn-danger btn-sm mt-3 mb-3"
+        data-toggle="modal"
+        data-target="#deleteDialogModal"
+        data-url="{{url}}"
+        data-item-id="{{id}}"
+    >löschen</button>
+    {{/if}}
+    {{/if}}
+</div>
