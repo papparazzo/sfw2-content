@@ -25,7 +25,7 @@
 <h1><?php echo($this->title); ?></h1>
 <?php endif; ?>
 <?php if($this->permission->createAllowed()): ?>
-<form class="noshow">
+<form id="<?php echo($this->getPathSimplified()); ?>" class="noshow">
     <div class="row">
         <label for="title" class="col-sm-2 col-form-label">Überschrift</label>
         <div class="col-sm-4">
@@ -44,10 +44,7 @@
     <div class="row">
         <label for="division" class="col-sm-2 col-form-label">Ressort</label>
         <div class="col-sm-4">
-            <select
-                class="custom-select form-control form-control-sm"
-                name="division"
-            >
+            <select class="custom-select form-control form-control-sm" name="division">
                 <?php foreach($this->divisions as $id => $name): ?>
                 <option value="<?php echo($id);?>"><?php echo($name);?></option>
                 <?php endforeach; ?>
@@ -59,8 +56,8 @@
         <label for="content" class="col-sm-2 col-form-label">Inhalt</label>
         <div class="col-sm-8">
             <textarea
-                style="height: 10rem"
-                class="form-control form-control-sm"
+                style="height: 15rem"
+                class="form-control form-control-sm html-editable"
                 placeholder="Gib hier bitte den Inhalt ein..."
                 name="content"
                 title="Gib hier bitte den Inhalt ein."
@@ -75,6 +72,7 @@
     data-toggle="modal"
     data-target="#createDialogModal"
     data-url="<?php echo($this->getCurrentPath()); ?>"
+    data-form-id="<?php echo($this->getPathSimplified()); ?>"
 >Neuer Eintrag</button>
 <?php endif; ?>
 <ul class="list-unstyled reload-data" data-url="<?php echo($this->getCurrentPath()); ?>" >

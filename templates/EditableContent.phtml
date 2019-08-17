@@ -23,29 +23,36 @@
 <h1><?php echo($this->title); ?></h1>
 <?php endif; ?>
 <?php if($this->permission->createAllowed()): ?>
-<form class="noshow">
+<form id="<?php echo($this->getPathSimplified()); ?>" class="noshow">
     <div class="row">
-        <div class="col-sm-12">
-            <textarea
-                id="content"
-                style="height: 10rem; width: 700px;"
-                cols="250"
-                rows="30"
-                class="form-control form-control-sm"
-                name="content"
-                title="Gib hier bitte den Inhalt ein."
-            ></textarea>
+        <label for="title" class="col-sm-2 col-form-label">Überschrift</label>
+            <div class="col-sm-4">
+                <input
+                    type="text"
+                    class="form-control form-control-sm"
+                    placeholder="Gib hier bitte die Überschrift ein..."
+                    name="title"
+                    value=""
+                    title="Gib hier bitte eine Überschrift ein."
+                    maxlength="100"
+                />
+                <div class="invalid-feedback"></div>
+            </div>
+        </div>
+        <div class="row">
+            <label for="content" class="col-sm-2 col-form-label">Inhalt</label>
+            <div class="col-sm-8">
+                <textarea
+                    style="height: 10rem"
+                    class="form-control form-control-sm"
+                    placeholder="Gib hier bitte den Inhalt ein..."
+                    name="content"
+                    title="Gib hier bitte den Inhalt ein."
+                    ></textarea>
             <div class="invalid-feedback"></div>
         </div>
     </div>
 </form>
-<button
-    type="button"
-    class="btn btn-success btn-sm"
-    data-toggle="modal"
-    data-target="#createDialogModal"
-    data-url="<?php echo($this->getCurrentPath()); ?>"
->Neuer Eintrag</button>
 <?php endif; ?>
 <div class="reload-data" data-url="<?php echo($this->getCurrentPath()); ?>" >
 </div>

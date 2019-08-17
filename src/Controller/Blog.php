@@ -60,7 +60,7 @@ class Blog extends AbstractController {
         $this->title = $title;
     }
 
-    public function index($all = false) {
+    public function index(bool $all = false) {
         unset($all);
         $content = new Content('SFW2\\Content\\Blog');
         $content->appendJSFile('Blog.handlebars.js');
@@ -70,7 +70,7 @@ class Blog extends AbstractController {
         return $content;
     }
 
-    public function read($all = false) {
+    public function read(bool $all = false) {
         $content = new Content('Blog');
         $entries = [];
 
@@ -129,7 +129,7 @@ class Blog extends AbstractController {
         return $content;
     }
 
-    public function delete($all = false) {
+    public function delete(bool $all = false) {
         $entryId = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
         if($entryId === false) {
             throw new ResolverException("invalid data given", ResolverException::INVALID_DATA_GIVEN);
@@ -142,10 +142,22 @@ class Blog extends AbstractController {
         if(!$this->database->delete($stmt, [$entryId, $this->pathId])) {
             throw new ResolverException("no entry found", ResolverException::NO_PERMISSION);
         }
-        return new Content(false, true);
+        return new Content();
+    }
+
+    public function update(bool $all = false) {
+        $entryId = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
+        if($entryId === false) {
+            throw new ResolverException("invalid data given", ResolverException::INVALID_DATA_GIVEN);
+        }
+        return $this->modify($entryId);
     }
 
     public function create() {
+        return $this->modify();
+    }
+
+    protected function modify($entryId = null, bool $all = false) {
         $content = new Content('Blog');
 
         $rulset = [
@@ -165,25 +177,53 @@ class Blog extends AbstractController {
             return $content;
         }
 
-        $stmt =
-            "INSERT INTO `{TABLE_PREFIX}_blog` " .
-            "SET `CreationDate` = NOW(), " .
-            "`Title` = '%s', " .
-            "`Content` = '%s', " .
-            "`UserId` = %d, " .
-            "`PathId` = %d, " .
-            "`DivisionId` = '%s' ";
+        if(is_null($entryId)) {
+            $stmt =
+                "INSERT INTO `{TABLE_PREFIX}_blog` " .
+                "SET `CreationDate` = NOW(), " .
+                "`Title` = '%s', " .
+                "`Content` = '%s', " .
+                "`UserId` = '%d', " .
+                "`PathId` = '%d', " .
+                "`DivisionId` = '%s' ";
 
-        $id = $this->database->insert(
-            $stmt,
-            [
-                $values['title']['value'],
-                $values['content']['value'],
-                $this->user->getUserId(),
-                $this->pathId,
-                $values['division']['value']
-            ]
-        );
+            $id = $this->database->insert(
+                $stmt,
+                [
+                    $values['title']['value'],
+                    $values['content']['value'],
+                    $this->user->getUserId(),
+                    $this->pathId,
+                    $values['division']['value']
+                ]
+            );
+        } else {
+            $stmt =
+                "UPDATE `{TABLE_PREFIX}_blog` " .
+                "SET `CreationDate` = NOW(), " .
+                "`Title` = '%s', " .
+                "`Content` = '%s', " .
+                "`UserId` = '%d', " .
+                "`DivisionId` = '%s' " .
+                "WHERE `Id` = '%s' AND `PathId` = '%s'";
+
+            if(!$all) {
+                $stmt .= "AND `UserId` = '" . $this->database->escape($this->user->getUserId()) . "'";
+            }
+
+            $id = $this->database->update(
+                $stmt,
+                [
+                    $values['title']['value'],
+                    $values['content']['value'],
+                    $this->user->getUserId(),
+                    $values['division']['value'],
+                    $entryId,
+                    $this->pathId
+                ]
+            );
+        }
+
         $cd = $this->getShortDate();
         $content->assign('resname',  ['value' => $this->getDivisionById($values['division']['value'])]);
         $content->assign('date',     ['value' => $cd]);

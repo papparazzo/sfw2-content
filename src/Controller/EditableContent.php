@@ -29,7 +29,7 @@ use SFW2\Controllers\Widget\Obfuscator\EMail;
 use SFW2\Controllers\Controller\Helper\DateTimeHelperTrait;
 use SFW2\Controllers\Controller\Helper\EMailHelperTrait;
 
-use SFW2\Core\DataValidator;
+use SFW2\Core\DataFormatter;
 use SFW2\Core\Database;
 
 
@@ -60,31 +60,56 @@ class EditableContent extends AbstractController {
     public function index($all = false) {
         unset($all);
         $content = new Content('SFW2\\Content\\EditableContent');
-        $content->appendJSFile('content.handlebars.js');
-        $content->appendJSFile('ckeditor/ckeditor.min.js');
+        $content->appendJSFile('EditableContent.handlebars.js');
+        # Ask for permission
+        $content->appendJSFile('EditableContentForm.handlebars.js');
         $content->appendJSFile('crud.js');
-        $content->appendJSFile('contenteditable.js');
-        $content->assign('title', $this->title);
-        $this->setContent($content);
         return $content;
     }
 
-    protected function setContent(Content $content) {
+    public function read($all = false) {
+        $content = new Content('EditableContent');
+
         $stmt =
-            "SELECT `content`.`Id`, `CreationDate`, `user`.`FirstName`, `user`.`LastName`, `Email`, `Content` " .
+            "SELECT `content`.`Id`, `CreationDate`, `user`.`FirstName`, `user`.`LastName`, `Email`, `Content`, `Title` " .
             "FROM `{TABLE_PREFIX}_content` AS `content` " .
             "LEFT JOIN `{TABLE_PREFIX}_user` AS `user` ON `user`.`Id` = `content`.`UserId` " .
             "WHERE `content`.`PathId` = '%s' " .
             "ORDER BY `Id` DESC ";
 
         $row = $this->database->selectRow($stmt, [$this->pathId]);
-        if(!empty($row) && !empty($row['Content'])) {
-            $content->assign('content', $row['Content']);
-            $content->assign('date',    $this->getShortDate($row['CreationDate']));
-            $content->assign('author',  $this->getShortName($row));
+        if(empty($row)) {
+            $entry['id'     ] = $this->createDummy();
+            $entry['date'   ] = $this->getShortDate();
+            $entry['title'  ] = $this->title;
+            $entry['content'] = '';
+            $entry['author' ] = '';
         } else {
-            $content->assign('content', '');
+            $entry = [];
+            $entry['id'     ] = $row['Id'];
+            $entry['date'   ] = $this->getShortDate($row['CreationDate']);
+            $entry['title'  ] = $row['Title'] == '' ? $this->title : $row['Title'];
+            $entry['content'] = $row['Content'];
+            $entry['author' ] = $this->getShortName($row);
         }
+        $entries = [];
+        $entries[] = $entry;
+        $content->assign('offset', 0);
+        $content->assign('hasNext', false);
+        $content->assign('entries', $entries);
+        return $content;
+    }
+
+    protected function createDummy() {
+        $stmt =
+            "INSERT INTO `{TABLE_PREFIX}_content` SET " .
+            "`PathId` = '%s', " .
+            "`CreationDate` = NOW(), " .
+            "`UserId` = '%d', " .
+            "`Title` = '', " .
+            "`Content` = '' ";
+
+        return $this->database->insert($stmt, [$this->pathId, $this->user->getUserId()]);
     }
 
     public function delete($all = false) {
@@ -103,17 +128,30 @@ class EditableContent extends AbstractController {
         return new Content();
     }
 
+    public function update(bool $all = false) {
+        $entryId = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
+        if($entryId === false) {
+            throw new ResolverException("invalid data given", ResolverException::INVALID_DATA_GIVEN);
+        }
+        return $this->modify($entryId);
+    }
+
     public function create() {
-        $content = new Content('content');
+        return $this->modify();
+    }
+
+    protected function modify($entryId = null, bool $all = false) {
+        $content = new Content('EditableContent');
 
         $rulset = [
-            'content' => ['isNotEmpty'],
+            'content' => ['doTrim', 'doConvertLineBreaks'],
+            'title' => ['doTrim'],
         ];
 
         $values = [];
 
-        $validator = new DataValidator($rulset);
-        $error = $validator->validate($_POST, $values);
+        $validator = new DataFormatter($rulset);
+        $error = $validator->format($_POST, $values);
         $content->assignArray($values);
 
         if(!$error) {
@@ -121,15 +159,48 @@ class EditableContent extends AbstractController {
             return $content;
         }
 
-        $stmt = "INSERT INTO `{TABLE_PREFIX}_content` SET `PathId` = '%s', `CreationDate` = NOW(), `UserId` = %d, `Content` = '%s' ";
+        if(is_null($entryId)) {
+            $stmt =
+                "INSERT INTO `{TABLE_PREFIX}_content` SET " .
+                "`PathId` = '%s', " .
+                "`CreationDate` = NOW(), " .
+                "`UserId` = '%d', " .
+                "`Title` = '%s', " .
+                "`Content` = '%s' ";
 
-        $id = $this->database->insert(
-            $stmt,
-            [$this->pathId, $this->user->getUserId(), $values['content']['value']]
-        );
+            $id = $this->database->insert(
+                $stmt,
+                [$this->pathId, $this->user->getUserId(), $values['title']['value'], $values['content']['value']]
+            );
+        } else {
+            $stmt =
+                "UPDATE `{TABLE_PREFIX}_content` SET " .
+                "`CreationDate` = NOW(), " .
+                "`UserId` = '%d', " .
+                "`Title` = '%s', " .
+                "`Content` = '%s' " .
+                "WHERE `Id` = '%s' AND `PathId` = '%s'";
+
+            if(!$all) {
+                $stmt .= "AND `UserId` = '" . $this->database->escape($this->user->getUserId()) . "'";
+            }
+
+            $id = $this->database->update(
+                $stmt,
+                [
+                    $this->user->getUserId(),
+                    $values['title']['value'],
+                    $values['content']['value'],
+                    $entryId,
+                    $this->pathId
+                ]
+            );
+        }
+
         $content->assign('date',     ['value' => $this->getShortDate()]);
         $content->assign('author',   ['value' => $this->getEMailByUser($this->user, $this->title)]);
         $content->assign('id',       ['value' => $id]);
+        $content->dataWereModified();
         return $content;
     }
 
@@ -140,5 +211,4 @@ class EditableContent extends AbstractController {
 
         return (string)(new EMail($data['Email'], $data['FirstName'] . ' ' . $data['LastName']));
     }
-
 }

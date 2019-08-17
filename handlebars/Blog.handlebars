@@ -1,4 +1,4 @@
-<li class="media my-4" id="{{id}}">
+<li class="media my-4" id="{{formid}}_recordset_{{id}}">
     <img style="width: 75px;" class="rounded mr-3" src="{{image}}" alt="Autor">
     <div class="media-body" style="border-left: 1px solid #929292; padding-left: 12px;">
         <h4 id="{{formid}}_title_{{id}}" style="font-weight: bolder;" class="mt-0 mb-1">{{title}}</h4>
@@ -28,6 +28,7 @@
         data-target="#deleteDialogModal"
         data-url="{{url}}"
         data-item-id="{{id}}"
+        data-form-id="{{formid}}"
     >löschen</button>
     {{/if}}
     </div>
