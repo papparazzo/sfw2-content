@@ -32,7 +32,11 @@ use SFW2\Controllers\Controller\Helper\ImageHelperTrait;
 use SFW2\Controllers\Controller\Helper\EMailHelperTrait;
 
 use SFW2\Core\Database;
-use SFW2\Core\DataValidator;
+
+use SFW2\Validator\Ruleset;
+use SFW2\Validator\Validator;
+use SFW2\Validator\Validators\IsNotEmpty;
+use SFW2\Validator\Validators\IsOneOf;
 
 class Blog extends AbstractController {
 
@@ -64,7 +68,6 @@ class Blog extends AbstractController {
         unset($all);
         $content = new Content('SFW2\\Content\\Blog');
         $content->appendJSFile('Blog.handlebars.js');
-        $content->appendJSFile('crud.js');
         $content->assign('divisions', $this->getDivisions());
         $content->assign('title', (string)$this->title);
         return $content;
@@ -160,15 +163,15 @@ class Blog extends AbstractController {
     protected function modify($entryId = null, bool $all = false) {
         $content = new Content('Blog');
 
-        $rulset = [
-            'title' => ['isNotEmpty'],
-            'content' => ['isNotEmpty'],
-            'division' => ['isNotEmpty', 'isOneOf:' . implode(',', array_keys($this->getDivisions()))]
-        ];
+
+        $rulset = new Ruleset();
+        $rulset->addNewRules('title', new IsNotEmpty());
+        $rulset->addNewRules('content', new IsNotEmpty());
+        $rulset->addNewRules('division', new IsNotEmpty(), new IsOneOf(array_keys($this->getDivisions())));
 
         $values = [];
 
-        $validator = new DataValidator($rulset);
+        $validator = new Validator($rulset);
         $error = $validator->validate($_POST, $values);
         $content->assignArray($values);
 
