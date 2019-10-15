@@ -50,7 +50,7 @@ class StaticContent extends AbstractController {
     protected $title;
 
     public function __construct(
-        int $pathId, PathMap $path, Database $database, Config $config, string $template, array $templateData = [], string $title = null
+        int $pathId, Database $database, Config $config, string $template, array $templateData = [], string $title = ''
     ) {
 
         /*
