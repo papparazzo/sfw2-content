@@ -74,6 +74,7 @@ class StaticContent extends AbstractController {
         $content->assign('chairman', $this->getChairman());
         $content->assign('mailaddr', (string)(new EMail($email, $email)));
         $content->assign('title', $this->title);
+        $content->assign('pathId', $this->pathId);
         $content->assignArray($this->templateData);
         return $content;
     }
