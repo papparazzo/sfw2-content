@@ -28,29 +28,30 @@
 <form id="<?php echo($this->getPathSimplified()); ?>" class="noshow">
     <div class="row">
         <label for="title" class="col-sm-2 col-form-label">Überschrift</label>
-            <div class="col-sm-4">
-                <input
-                    type="text"
-                    class="form-control form-control-sm"
-                    placeholder="Gib hier bitte die Überschrift ein..."
-                    name="title"
-                    value=""
-                    title="Gib hier bitte eine Überschrift ein."
-                    maxlength="100"
-                />
-                <div class="invalid-feedback"></div>
-            </div>
+        <div class="col-sm-4">
+            <input
+                type="text"
+                class="form-control form-control-sm"
+                placeholder="Gib hier bitte die Überschrift ein..."
+                name="title"
+                value=""
+                title="Gib hier bitte eine Überschrift ein."
+                maxlength="100"
+            />
+            <div class="invalid-feedback"></div>
         </div>
-        <div class="row">
-            <label for="content" class="col-sm-2 col-form-label">Inhalt</label>
-            <div class="col-sm-8">
-                <textarea
-                    style="height: 10rem"
-                    class="form-control form-control-sm"
-                    placeholder="Gib hier bitte den Inhalt ein..."
-                    name="content"
-                    title="Gib hier bitte den Inhalt ein."
-                ></textarea>
+    </div>
+    <div class="row">
+        <label for="content" class="col-sm-2 col-form-label">Inhalt</label>
+        <div class="col-sm-8">
+            <textarea
+                id="<?php echo($this->getPathSimplified()); ?>_area"
+                style="height: 10rem"
+                class="form-control form-control-sm"
+                placeholder="Gib hier bitte den Inhalt ein..."
+                name="content"
+                title="Gib hier bitte den Inhalt ein."
+            ></textarea>
             <div class="invalid-feedback"></div>
         </div>
     </div>
