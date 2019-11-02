@@ -23,13 +23,13 @@
 namespace SFW2\Content\Controller;
 
 use SFW2\Routing\AbstractController;
+use SFW2\Routing\Resolver\ResolverException;
 use SFW2\Routing\Result\Content;
 use SFW2\Authority\User;
 use SFW2\Controllers\Widget\Obfuscator\EMail;
 use SFW2\Controllers\Controller\Helper\DateTimeHelperTrait;
 use SFW2\Controllers\Controller\Helper\EMailHelperTrait;
 
-use SFW2\Core\DataFormatter;
 use SFW2\Core\Database;
 
 
@@ -63,7 +63,6 @@ class EditableContent extends AbstractController {
         $content->appendJSFile('EditableContent.handlebars.js');
         # Ask for permission
         $content->appendJSFile('EditableContentForm.handlebars.js');
-        $content->appendJSFile('crud.js');
         return $content;
     }
 
@@ -133,7 +132,7 @@ class EditableContent extends AbstractController {
         if($entryId === false) {
             throw new ResolverException("invalid data given", ResolverException::INVALID_DATA_GIVEN);
         }
-        return $this->modify($entryId);
+        return $this->modify($entryId, $all);
     }
 
     public function create() {
@@ -143,6 +142,7 @@ class EditableContent extends AbstractController {
     protected function modify($entryId = null, bool $all = false) {
         $content = new Content('EditableContent');
 
+        /*
         $rulset = [
             'content' => ['doTrim', 'doConvertLineBreaks'],
             'title' => ['doTrim'],
@@ -150,14 +150,28 @@ class EditableContent extends AbstractController {
 
         $values = [];
 
-        $validator = new DataFormatter($rulset);
+        Den Dataformatter gibt es nicht mehr!!!!
+        $validator = new Data Form atter($rulset);
         $error = $validator->format($_POST, $values);
+         *
+         */
+        $values = [
+            'title' => [
+                'value' => $_POST['title'],
+                'hint' => ''
+            ],
+            'content' => [
+                'value' => nl2br($_POST['content']),
+                'hint' => ''
+            ]
+        ];
+
         $content->assignArray($values);
 
-        if(!$error) {
-            $content->setError(true);
-            return $content;
-        }
+        #if(!$error) {
+        #    $content->setError(true);
+        #    return $content;
+        #}
 
         if(is_null($entryId)) {
             $stmt =
@@ -168,7 +182,7 @@ class EditableContent extends AbstractController {
                 "`Title` = '%s', " .
                 "`Content` = '%s' ";
 
-            $id = $this->database->insert(
+            $entryId = $this->database->insert(
                 $stmt,
                 [$this->pathId, $this->user->getUserId(), $values['title']['value'], $values['content']['value']]
             );
@@ -179,27 +193,22 @@ class EditableContent extends AbstractController {
                 "`UserId` = '%d', " .
                 "`Title` = '%s', " .
                 "`Content` = '%s' " .
-                "WHERE `Id` = '%s' AND `PathId` = '%s'";
+                "WHERE `Id` = '%s' AND `PathId` = '%s' ";
 
             if(!$all) {
                 $stmt .= "AND `UserId` = '" . $this->database->escape($this->user->getUserId()) . "'";
             }
 
-            $id = $this->database->update(
-                $stmt,
-                [
-                    $this->user->getUserId(),
-                    $values['title']['value'],
-                    $values['content']['value'],
-                    $entryId,
-                    $this->pathId
-                ]
-            );
+            $data = [$this->user->getUserId(), $values['title']['value'], $values['content']['value'], $entryId, $this->pathId];
+
+            if($this->database->update($stmt, $data) == 0) {
+                throw new ResolverException("no entry found", ResolverException::NO_PERMISSION);
+            }
         }
 
         $content->assign('date',     ['value' => $this->getShortDate()]);
         $content->assign('author',   ['value' => $this->getEMailByUser($this->user, $this->title)]);
-        $content->assign('id',       ['value' => $id]);
+        $content->assign('id',       ['value' => $entryId]);
         $content->dataWereModified();
         return $content;
     }
