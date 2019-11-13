@@ -161,7 +161,7 @@ class EditableContent extends AbstractController {
                 'hint' => ''
             ],
             'content' => [
-                'value' => nl2br($_POST['content']),
+                'value' => $_POST['content'],
                 'hint' => ''
             ]
         ];
