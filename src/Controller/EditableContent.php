@@ -26,12 +26,13 @@ use SFW2\Routing\AbstractController;
 use SFW2\Routing\Resolver\ResolverException;
 use SFW2\Routing\Result\Content;
 use SFW2\Authority\User;
+
 use SFW2\Controllers\Widget\Obfuscator\EMail;
 use SFW2\Controllers\Controller\Helper\DateTimeHelperTrait;
 use SFW2\Controllers\Controller\Helper\EMailHelperTrait;
 
 use SFW2\Core\Database;
-
+use SFW2\Core\Config;
 
 class EditableContent extends AbstractController {
 
@@ -44,22 +45,44 @@ class EditableContent extends AbstractController {
     protected $database;
 
     /**
+     * @var Config
+     */
+    protected $config;
+
+    /**
      * @var User
      */
     protected $user;
 
+    /**
+     * @var string
+     */
     protected $title;
 
-    public function __construct(int $pathId, Database $database, User $user, string $title = null) {
+    /**
+     * @var boolean
+     */
+    protected $showEditor;
+
+    /**
+     * @var boolean
+     */
+    protected $showModificationDate;
+
+    public function __construct(int $pathId, Database $database, Config $config, User $user, bool $showEditor = true, bool $showModificationDate = true, string $title = '') {
         parent::__construct($pathId);
         $this->database = $database;
+        $this->config = $config;
         $this->user = $user;
         $this->title = $title;
+        $this->showEditor = $showEditor;
+        $this->showModificationDate = $showModificationDate;
     }
 
     public function index($all = false) {
         unset($all);
         $content = new Content('SFW2\\Content\\EditableContent');
+        $content->assign('showEditor', $this->showEditor);
         $content->appendJSFile('EditableContent.handlebars.js');
         # Ask for permission
         $content->appendJSFile('EditableContentForm.handlebars.js');
@@ -67,6 +90,7 @@ class EditableContent extends AbstractController {
     }
 
     public function read($all = false) {
+        unset($all);
         $content = new Content('EditableContent');
 
         $stmt =
@@ -77,20 +101,24 @@ class EditableContent extends AbstractController {
             "ORDER BY `Id` DESC ";
 
         $row = $this->database->selectRow($stmt, [$this->pathId]);
+        $entry = [];
         if(empty($row)) {
-            $entry['id'     ] = $this->createDummy();
-            $entry['date'   ] = $this->getShortDate();
-            $entry['title'  ] = $this->title;
-            $entry['content'] = '';
-            $entry['author' ] = '';
+            $entry['id'      ] = $this->createDummy();
+            $entry['date'    ] = $this->getShortDate();
+            $entry['title'   ] = $this->title;
+            $entry['origin'  ] = '';
+            $entry['replaced'] = '';
+            $entry['author'  ] = '';
         } else {
-            $entry = [];
-            $entry['id'     ] = $row['Id'];
-            $entry['date'   ] = $this->getShortDate($row['CreationDate']);
-            $entry['title'  ] = $row['Title'] == '' ? $this->title : $row['Title'];
-            $entry['content'] = $row['Content'];
-            $entry['author' ] = $this->getShortName($row);
+            $entry['id'      ] = $row['Id'];
+            $entry['date'    ] = $this->getShortDate($row['CreationDate']);
+            $entry['title'   ] = $row['Title'] == '' ? $this->title : $row['Title'];
+            $entry['origin'  ] = $row['Content'];
+            $entry['replaced'] = $this->parseContent($row['Content']);
+            $entry['author'  ] = $this->getShortName($row);
         }
+        $entry['showModificationDate'] = $this->showModificationDate;
+
         $entries = [];
         $entries[] = $entry;
         $content->assign('offset', 0);
@@ -139,22 +167,9 @@ class EditableContent extends AbstractController {
         return $this->modify();
     }
 
-    protected function modify($entryId = null, bool $all = false) {
+    protected function modify($entryId = null, bool $all = false) : Content {
         $content = new Content('EditableContent');
 
-        /*
-        $rulset = [
-            'content' => ['doTrim', 'doConvertLineBreaks'],
-            'title' => ['doTrim'],
-        ];
-
-        $values = [];
-
-        Den Dataformatter gibt es nicht mehr!!!!
-        $validator = new Data Form atter($rulset);
-        $error = $validator->format($_POST, $values);
-         *
-         */
         $values = [
             'title' => [
                 'value' => $_POST['title'],
@@ -167,11 +182,6 @@ class EditableContent extends AbstractController {
         ];
 
         $content->assignArray($values);
-
-        #if(!$error) {
-        #    $content->setError(true);
-        #    return $content;
-        #}
 
         if(is_null($entryId)) {
             $stmt =
@@ -213,11 +223,36 @@ class EditableContent extends AbstractController {
         return $content;
     }
 
-    protected function getShortName(array $data) {
+    protected function getShortName(array $data) : string {
         if(empty($data['Email'])) {
             return $data['FirstName'] . ' ' . $data['LastName'];
         }
 
         return (string)(new EMail($data['Email'], $data['FirstName'] . ' ' . $data['LastName']));
+    }
+
+    protected function parseContent($content) : string {
+        $content = str_replace('{{chairman}}', $this->getChairman(), $content);
+        $content = str_replace('{{webmaster}}', $this->getWebMasterEMailAddress(), $content);
+        return $content;
+    }
+
+    protected function getWebMasterEMailAddress() : string {
+        $email = $this->config->getVal('project', 'eMailWebMaster');
+        return (string)(new EMail($email, $email));
+    }
+
+    protected function getChairman() : string {
+        $stmt =
+            "SELECT CONCAT(IF(`user`.`Sex` = 'MALE', 'Herr ', 'Frau '), `user`.`FirstName`, ' ', `user`. `LastName`) AS `Chairman` " .
+            "FROM `{TABLE_PREFIX}_position` AS `position` " .
+            "LEFT JOIN `{TABLE_PREFIX}_division` AS `division` " .
+            "ON `division`.`Id` = `position`.`DivisionId` " .
+            "LEFT JOIN `{TABLE_PREFIX}_user` AS `user` " .
+            "ON `user`.`Id` = `position`.`UserId` " .
+            "WHERE `position`.`Order` = '1' " .
+            "AND `division`.`Position` = '0' ";
+
+        return $this->database->selectSingle($stmt);
     }
 }

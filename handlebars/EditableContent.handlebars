@@ -1,13 +1,16 @@
 <div id="{{formid}}_recordset_{{id}}">
     <h1 id="{{formid}}_title_{{id}}">{{{title}}}</h1>
     <div class="mt-3">
-        {{#if content}}
-        <span id="{{formid}}_content_{{id}}">{{{content}}}</span>
+        {{#if origin}}
+        <span class="noshow" id="{{formid}}_content_{{id}}">{{{origin}}}</span>
+        <span>{{{replaced}}}</span>
+        {{#if showModificationDate}}
         <div class="modificationDate mt-5">
             <small class="blogheader">
-                Erstellt von {{{author}}} am <time pubdate="pubdate">{{date}}</time>
+                Zuletzt bearbeitet von {{{author}}} am <time pubdate="pubdate">{{date}}</time>
             </small>
         </div>
+        {{/if}}
         {{else}}
         <span id="{{formid}}_content_{{id}}"></span>
         <div class="alert alert-info mt-5" role="alert"><strong>Anmerkung:</strong><p>Im Moment gibt's nichts Neues zu berichten!</p></div>

@@ -45,11 +45,15 @@
         <label for="content" class="col-sm-2 col-form-label">Inhalt</label>
         <div class="col-sm-8">
             <textarea
+                <?php if($this->showEditor): ?>
                 id="<?php echo($this->getPathSimplified()); ?>_area"
+                data-name="content"
+                <?php else: ?>
+                name="content"
+                <?php endif; ?>
                 style="height: 10rem"
                 class="form-control form-control-sm"
                 placeholder="Gib hier bitte den Inhalt ein..."
-                data-name="content"
                 title="Gib hier bitte den Inhalt ein."
             ></textarea>
             <div class="invalid-feedback"></div>
