@@ -1,1 +1,95 @@
-<img class="content-image rounded float-left mb-2" alt="" src="/img/<?php echo($this->pathId);?>/poster.png">
+<?php
+
+/**
+ *  SFW2 - SimpleFrameWork
+ *
+ *  Copyright (C) 2017  Stefan Paproth
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as
+ *  published by the Free Software Foundation, either version 3 of the
+ *  License, or (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ *  GNU Affero General Public License for more details.
+ *
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program. If not, see <http://www.gnu.org/licenses/agpl.txt>.
+ *
+ */
+
+?>
+<h1><?php echo($this->title); ?></h1>
+<?php if($this->permission->createAllowed()): ?>
+<form id="<?php echo($this->getPathSimplified()); ?>" class="noshow">
+    <div class="row">
+        <label for="newspaper" class="col-sm-4 col-form-label">Bild</label>
+        <div class="col-sm-7">
+            <div class="fileupload">
+
+                <!-- FIXME --- 8x ---- 8x --- !-->
+
+                <div class="custom-file">
+                    <input data-onlyimage="true" type="file" class="custom-file-input" id="customFile">
+                    <div class="invalid-feedback"></div>
+                    <label class="custom-file-label" for="customFile">Datei auswählen</label>
+                </div>
+
+                <script>
+                $(document).ready(function () {
+                    bsCustomFileInput.init();
+                });
+                </script>
+                <div class="noshow progress mt-2">
+                    <div id="progressbar-file" class="progress-bar progress-bar-striped bg-success progress-bar-animated" role="progressbar" style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
+                </div>
+
+                    <?php /*
+                <div class="dropzone">
+                    <a class="btnRemove noshow" href="#">x</a>
+                    <div id="fileSelectDescr_">
+                        <?php if(false && $this->multiple): ?>
+                        Dateien hier ablegen
+                        <?php else: ?>
+                        Datei hier ablegen
+                        <?php endif; ?>
+                    </div>
+                    <div id="clearFileSelect_" class="noshow">
+                        <input
+                            class="fileselectupload"
+                            type="file"
+                            name="file"
+                            <?php if(false && $this->multiple): ?>
+                            multiple="multiple"
+                            <?php endif; ?>
+                            style="width: 24em;"
+                        />
+                    </div>
+                    <div class="currfile"></div>
+                </div>
+*/ ?>
+                <!-- 8x ---- 8x --- !-->
+
+            </div>
+        </div>
+    </div>
+</form>
+<button
+    type="button"
+    class="btn btn-success btn-sm"
+    data-toggle="modal"
+    data-target="#createDialogModal"
+    data-url="<?php echo($this->getCurrentPath()); ?>"
+    data-form-id="<?php echo($this->getPathSimplified()); ?>"
+>Neuer Eintrag</button>
+<?php endif; ?>
+<img
+    class="content-image rounded float-left mb-2"
+    alt=""
+    src="<?php echo($this->file); ?>"
+>
+<div class="modificationDate">
+    Stand: <time pubdate="pubdate"><?php echo($this->modificationDate); ?></time>
+</div>
