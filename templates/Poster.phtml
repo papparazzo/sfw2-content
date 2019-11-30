@@ -22,17 +22,41 @@
 
 ?>
 <h1><?php echo($this->title); ?></h1>
+<?php if($this->file == ''): ?>
+<div class="alert alert-info mt-5" role="alert"><strong>Anmerkung:</strong><p>Im Moment gibt's nichts Neues zu berichten!</p></div>
+<?php else: ?>
+<img
+    class="content-image rounded float-left mb-2"
+    alt=""
+    src="/<?php echo($this->file); ?>"
+>
+<?php endif; ?>
 <?php if($this->permission->createAllowed()): ?>
 <form id="<?php echo($this->getPathSimplified()); ?>" class="noshow">
     <div class="row">
-        <label for="newspaper" class="col-sm-4 col-form-label">Bild</label>
+        <label for="title" class="col-sm-2 col-form-label">Überschrift</label>
+        <div class="col-sm-7">
+            <input
+                type="text"
+                class="form-control form-control-sm"
+                placeholder="Gib hier bitte die Überschrift ein..."
+                name="title"
+                value=""
+                title="Gib hier bitte eine Überschrift ein."
+                maxlength="100"
+            />
+            <div class="invalid-feedback"></div>
+        </div>
+    </div>
+    <div class="row">
+        <label for="newspaper" class="col-sm-2 col-form-label">Bild / PDF</label>
         <div class="col-sm-7">
             <div class="fileupload">
 
                 <!-- FIXME --- 8x ---- 8x --- !-->
 
                 <div class="custom-file">
-                    <input data-onlyimage="true" type="file" class="custom-file-input" id="customFile">
+                    <input data-onlyimage="false" type="file" class="custom-file-input" id="customFile">
                     <div class="invalid-feedback"></div>
                     <label class="custom-file-label" for="customFile">Datei auswählen</label>
                 </div>
@@ -83,13 +107,23 @@
     data-target="#createDialogModal"
     data-url="<?php echo($this->getCurrentPath()); ?>"
     data-form-id="<?php echo($this->getPathSimplified()); ?>"
->Neuer Eintrag</button>
+>bearbeiten</button>
 <?php endif; ?>
-<img
-    class="content-image rounded float-left mb-2"
-    alt=""
-    src="<?php echo($this->file); ?>"
->
-<div class="modificationDate">
-    Stand: <time pubdate="pubdate"><?php echo($this->modificationDate); ?></time>
+<?php if($this->file != ''): ?>
+<?php if($this->permission->deleteAllAllowed()): ?>
+<button
+    type="button"
+    class="btn btn-danger btn-sm"
+    data-toggle="modal"
+    data-target="#deleteDialogModal"
+    data-url="<?php echo($this->getCurrentPath()); ?>"
+    data-item-id="<?php echo($this->id); ?>"
+    data-form-id="<?php echo($this->getPathSimplified()); ?>"
+>löschen</button>
+<?php endif; ?>
+<div class="modificationDate mt-5">
+    <small class="blogheader">
+        Zuletzt bearbeitet von <?php echo($this->author);?> am <time pubdate="pubdate"><?php echo($this->date);?></time>
+    </small>
 </div>
+<?php endif; ?>

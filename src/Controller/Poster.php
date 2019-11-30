@@ -23,7 +23,9 @@
 namespace SFW2\Content\Controller;
 
 use SFW2\Routing\AbstractController;
+use SFW2\Routing\Resolver\ResolverException;
 use SFW2\Routing\Result\Content;
+use SFW2\Routing\Result\Redirect;
 
 use SFW2\Core\Database;
 use SFW2\Authority\User;
@@ -31,7 +33,14 @@ use SFW2\Authority\User;
 use SFW2\Controllers\Controller\Helper\DateTimeHelperTrait;
 use SFW2\Controllers\Controller\Helper\EMailHelperTrait;
 
+use Exception;
+
 class Poster extends AbstractController {
+
+    const FILE_NAME = 'poster.png';
+
+    const FILE_TYPE_IMAGE = 0;
+    const FILE_TYPE_PDF   = 1;
 
     use DateTimeHelperTrait;
     use EMailHelperTrait;
@@ -71,193 +80,134 @@ class Poster extends AbstractController {
 
         $row = $this->database->selectRow($stmt, [$this->pathId]);
         if(empty($row)) {
-            $entry['date'  ] = $this->getShortDate();
-            $entry['title' ] = $this->title;
-            $entry['file'  ] = '';
-            $entry['author'] = '';
+            $content->assign('title',  $this->title);
+            $content->assign('file',   '');
         } else {
-            $entry = [];
-            $entry['date'  ] = $this->getShortDate($row['CreationDate']);
-            $entry['title' ] = $row['Title'] == '' ? $this->title : $row['Title'];
-            $entry['file'  ] = $row['FileName'];
-            $entry['author'] = $this->getShortName($row);
+            $content->assign('date',   $this->getShortDate($row['CreationDate']));
+            $content->assign('title',  $row['Title'] == '' ? $this->title : $row['Title']);
+            $content->assign('file',   $row['FileName']);
+            $content->assign('author', $this->getShortName($row));
+            $content->assign('id',     $row['Id']);
         }
-
-        $content->assign('title',            $this->title);
-        $content->assign('modificationDate', $this->getLastModificatonDate());
-
-
-        $entries = [];
-        $entries[] = $entry;
-        $content->assign('offset', 0);
-        $content->assign('hasNext', false);
-        $content->assign('entries', $entries);
         return $content;
     }
 
+    public function create() {
+        $content = new Content('Poster');
 
+        $validateOnly = filter_input(INPUT_POST, 'validateOnly', FILTER_VALIDATE_BOOLEAN);
 
-
-
-
-
-
-
-
-
-
-    public function update(bool $all = false) {
-        $entryId = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
-        if($entryId === false) {
-            throw new ResolverException("invalid data given", ResolverException::INVALID_DATA_GIVEN);
-        }
-        return $this->modify($entryId);
-    }
-
-/*
-    /img/<?php echo($this->pathId);?>/poster.png
-
-    /*
-    public function addImage() : Content {
-        $galleryId = filter_input(INPUT_POST, 'gallery', FILTER_SANITIZE_STRING);
-
-        $folder = $this->getGalleryPath($galleryId);
-
-        $filename = $this->addFile($folder, self::DIMENSIONS);
-
-        $highFolder = $folder . DIRECTORY_SEPARATOR . 'high' . DIRECTORY_SEPARATOR;
-
-        if(!is_file($folder . self::PREVIEW_FILE)) {
-            $this->generatePreview($filename, self::DIMENSIONS, $highFolder, $folder);
+        if($validateOnly) {
+            return $content;
         }
 
-        return new Content();
-    }
-*/
+        $title = filter_input(INPUT_POST, 'title', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
 
+        $this->delete();
 
-}
+        $fileName = $this->addFile();
 
-
-
-
-
-use SFW2\Routing\AbstractController;
-use SFW2\Routing\Resolver\ResolverException;
-use SFW2\Routing\Result\Content;
-
-use SFW2\Controllers\Widget\Obfuscator\EMail;
-
-
-class EditableContent extends AbstractController {
-
-
-
-
-
-
-
-    protected function createDummy() {
         $stmt =
-            "INSERT INTO `{TABLE_PREFIX}_content` SET " .
-            "`PathId` = '%s', " .
-            "`CreationDate` = NOW(), " .
-            "`UserId` = '%d', " .
-            "`Title` = '', " .
-            "`Content` = '' ";
+            "INSERT INTO `{TABLE_PREFIX}_poster` " .
+            "SET `CreationDate` = NOW(), " .
+            "`PathId` = '%s', ".
+            "`UserId` = '%s', " .
+            "`Title` = '%s', " .
+            "`FileName` = '%s' ";
 
-        return $this->database->insert($stmt, [$this->pathId, $this->user->getUserId()]);
+        $id = $this->database->insert(
+            $stmt,
+            [
+                $this->pathId,
+                $this->user->getUserId(),
+                $title,
+                $fileName
+            ]
+        );
+        return $content;
     }
 
-    public function delete($all = false) {
+    public function delete(bool $all = false) {
+        $file = 'img' . DIRECTORY_SEPARATOR . $this->pathId . DIRECTORY_SEPARATOR . self::FILE_NAME;
+        if(is_file($file) && !unlink($file)) {
+            throw new ResolverException("could not delete file <$file>", ResolverException::INVALID_DATA_GIVEN);
+        }
+
         $entryId = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
         if($entryId === false) {
             throw new ResolverException("invalid data given", ResolverException::INVALID_DATA_GIVEN);
         }
-        $stmt = "DELETE FROM `{TABLE_PREFIX}_content` WHERE `Id` = '%s' AND `PathId` = '%s'";
+        $stmt = "DELETE FROM `{TABLE_PREFIX}_poster` WHERE `Id` = '%s' AND `PathId` = '%s'";
 
         if(!$all) {
             $stmt .= "AND `UserId` = '" . $this->database->escape($this->user->getUserId()) . "'";
         }
-        if(!$this->database->delete($stmt, [$entryId, $this->pathId])) {
-            throw new ResolverException("no entry found", ResolverException::NO_PERMISSION);
-        }
+        $this->database->delete($stmt, [$entryId, $this->pathId]);
+        return new Redirect();
+    }
+
+    public function read(bool $all = false) {
         return new Content();
     }
 
-    public function update(bool $all = false) {
-        $entryId = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
-        if($entryId === false) {
-            throw new ResolverException("invalid data given", ResolverException::INVALID_DATA_GIVEN);
-        }
-        return $this->modify($entryId, $all);
-    }
+    protected function addFile() {
+        $folder = 'img' . DIRECTORY_SEPARATOR . $this->pathId . DIRECTORY_SEPARATOR;
 
-    public function create() {
-        return $this->modify();
-    }
-
-    protected function modify($entryId = null, bool $all = false) {
-        $content = new Content('EditableContent');
-
-        $values = [
-            'title' => [
-                'value' => $_POST['title'],
-                'hint' => ''
-            ],
-            'content' => [
-                'value' => $_POST['content'],
-                'hint' => ''
-            ]
-        ];
-
-        $content->assignArray($values);
-
-        if(is_null($entryId)) {
-            $stmt =
-                "INSERT INTO `{TABLE_PREFIX}_content` SET " .
-                "`PathId` = '%s', " .
-                "`CreationDate` = NOW(), " .
-                "`UserId` = '%d', " .
-                "`Title` = '%s', " .
-                "`Content` = '%s' ";
-
-            $entryId = $this->database->insert(
-                $stmt,
-                [$this->pathId, $this->user->getUserId(), $values['title']['value'], $values['content']['value']]
-            );
-        } else {
-            $stmt =
-                "UPDATE `{TABLE_PREFIX}_content` SET " .
-                "`CreationDate` = NOW(), " .
-                "`UserId` = '%d', " .
-                "`Title` = '%s', " .
-                "`Content` = '%s' " .
-                "WHERE `Id` = '%s' AND `PathId` = '%s' ";
-
-            if(!$all) {
-                $stmt .= "AND `UserId` = '" . $this->database->escape($this->user->getUserId()) . "'";
-            }
-
-            $data = [$this->user->getUserId(), $values['title']['value'], $values['content']['value'], $entryId, $this->pathId];
-
-            if($this->database->update($stmt, $data) == 0) {
-                throw new ResolverException("no entry found", ResolverException::NO_PERMISSION);
-            }
+        if(!isset($_POST['file'])) {
+            throw new Exception("file not set");
         }
 
-        $content->assign('date',     ['value' => $this->getShortDate()]);
-        $content->assign('author',   ['value' => $this->getEMailByUser($this->user, $this->title)]);
-        $content->assign('id',       ['value' => $entryId]);
-        $content->dataWereModified();
-        return $content;
-    }
-
-    protected function getShortName(array $data) {
-        if(empty($data['Email'])) {
-            return $data['FirstName'] . ' ' . $data['LastName'];
+        if(!is_dir($folder) && !mkdir($folder, 0777, true)) {
+            throw new Exception("could not create destination-folder <$folder>");
         }
 
-        return (string)(new EMail($data['Email'], $data['FirstName'] . ' ' . $data['LastName']));
+        $chunk = explode(';', $_POST['file']);
+        $type = explode(':', $chunk[0]);
+        $type = $type[1];
+        $data = explode(',', $chunk[1]);
+
+        $filename = $folder . self::FILE_NAME;
+        $orgFilename = $filename;
+
+        switch($type) {
+            case 'image/pjpeg':
+            case 'image/jpeg':
+            case 'image/jpg':
+            case 'image/png':
+            case 'image/x-png':
+                $ftype = self::FILE_TYPE_IMAGE;
+                break;
+
+            case 'application/pdf':
+                $ftype = self::FILE_TYPE_PDF;
+                $orgFilename .= '.pdf';
+                break;
+
+            default:
+                throw new Exception("invalid image type <$type> given!");
+        }
+
+        if(!file_put_contents($orgFilename, base64_decode($data[1]))) {
+            throw new Exception("could not store file <" . self::FILE_NAME . "> in path <$folder>");
+        }
+        if($ftype == self::FILE_TYPE_PDF) {
+            $this->convertPDFToJPG($orgFilename, $filename);
+        }
+
+        return $filename;
     }
+
+    protected function convertPDFToJPG(string $pdfFile, string $imgFile) : void {
+        $pdfFile = escapeshellarg($pdfFile);
+        $jpg_file = escapeshellarg($imgFile);
+
+        $result = 0;
+        $output = [];
+        exec("convert -density 300 {$pdfFile} {$jpg_file}", $output, $result);
+        if($result != 0) {
+            throw new Exception("could not convert file <$pdfFile>");
+        }
+
+    }
+
 }
