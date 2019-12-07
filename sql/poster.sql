@@ -38,4 +38,5 @@ CREATE TABLE `sfw2_poster` (
 -- Indexes for table `sfw2_poster`
 --
 ALTER TABLE `sfw2_poster` ADD PRIMARY KEY (`Id`);
+ALTER TABLE `sfw2_poster` ADD UNIQUE( `PathId`);
 ALTER TABLE `sfw2_poster` MODIFY `Id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
