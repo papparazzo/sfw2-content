@@ -32,6 +32,7 @@ use SFW2\Authority\User;
 
 use SFW2\Controllers\Controller\Helper\DateTimeHelperTrait;
 use SFW2\Controllers\Controller\Helper\EMailHelperTrait;
+use SFW2\Controllers\Controller\Helper\ImageHelperTrait;
 
 use Exception;
 
@@ -42,23 +43,15 @@ class Poster extends AbstractController {
     const FILE_TYPE_IMAGE = 0;
     const FILE_TYPE_PDF   = 1;
 
+    const DIMENSIONS = 800;
+
     use DateTimeHelperTrait;
     use EMailHelperTrait;
+    use ImageHelperTrait;
 
-    /**
-     * @var Database
-     */
-    protected $database;
-
-    /**
-     * @var User
-     */
-    protected $user;
-
-    /**
-     * @var string
-     */
-    protected $title;
+    protected Database $database;
+    protected User $user;
+    protected string $title;
 
     public function __construct(int $pathId, Database $database, User $user, string $title = '') {
         parent::__construct($pathId);
@@ -67,7 +60,7 @@ class Poster extends AbstractController {
         $this->title = $title;
     }
 
-    public function index(bool $all = false) {
+    public function index(bool $all = false) : Content {
         unset($all);
         $content = new Content('SFW2\\Content\\Poster');
 
@@ -92,7 +85,7 @@ class Poster extends AbstractController {
         return $content;
     }
 
-    public function create() {
+    public function create() : Content {
         $content = new Content('Poster');
 
         $validateOnly = filter_input(INPUT_POST, 'validateOnly', FILTER_VALIDATE_BOOLEAN);
@@ -108,7 +101,7 @@ class Poster extends AbstractController {
         $fileName = $this->addFile();
 
         $stmt =
-            "INSERT INTO `{TABLE_PREFIX}_poster` " .
+            "REPLACE INTO `{TABLE_PREFIX}_poster` " .
             "SET `CreationDate` = NOW(), " .
             "`PathId` = '%s', ".
             "`UserId` = '%s', " .
@@ -127,7 +120,7 @@ class Poster extends AbstractController {
         return $content;
     }
 
-    public function delete(bool $all = false) {
+    public function delete(bool $all = false) : Redirect {
         $file = 'img' . DIRECTORY_SEPARATOR . $this->pathId . DIRECTORY_SEPARATOR . self::FILE_NAME;
         if(is_file($file) && !unlink($file)) {
             throw new ResolverException("could not delete file <$file>", ResolverException::INVALID_DATA_GIVEN);
@@ -146,11 +139,11 @@ class Poster extends AbstractController {
         return new Redirect();
     }
 
-    public function read(bool $all = false) {
+    public function read(bool $all = false) : Content {
         return new Content();
     }
 
-    protected function addFile() {
+    protected function addFile() : string {
         $folder = 'img' . DIRECTORY_SEPARATOR . $this->pathId . DIRECTORY_SEPARATOR;
 
         if(!isset($_POST['file'])) {
@@ -193,21 +186,8 @@ class Poster extends AbstractController {
         if($ftype == self::FILE_TYPE_PDF) {
             $this->convertPDFToJPG($orgFilename, $filename);
         }
+        $this->generateThumb($filename, $filename, self::DIMENSIONS);
 
         return $filename;
     }
-
-    protected function convertPDFToJPG(string $pdfFile, string $imgFile) : void {
-        $pdfFile = escapeshellarg($pdfFile);
-        $jpg_file = escapeshellarg($imgFile);
-
-        $result = 0;
-        $output = [];
-        exec("convert -density 300 {$pdfFile} {$jpg_file}", $output, $result);
-        if($result != 0) {
-            throw new Exception("could not convert file <$pdfFile>");
-        }
-
-    }
-
 }

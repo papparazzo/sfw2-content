@@ -24,7 +24,6 @@ namespace SFW2\Content\Controller;
 
 use SFW2\Routing\AbstractController;
 use SFW2\Routing\Result\Content;
-use SFW2\Routing\PathMap\PathMap;
 
 use SFW2\Controllers\Widget\Obfuscator\EMail;
 
@@ -33,33 +32,15 @@ use SFW2\Core\Config;
 
 class StaticContent extends AbstractController {
 
-    /**
-     * @var Database
-     */
-    protected $database;
-
-    /**
-     * @var Config
-     */
-    protected $config;
-
-    protected $template;
-
-    protected $templateData;
-
-    protected $title;
+    protected Database $database;
+    protected Config $config;
+    protected string $template;
+    protected array $templateData;
+    protected string $title;
 
     public function __construct(
         int $pathId, Database $database, Config $config, string $template, array $templateData = [], string $title = ''
     ) {
-
-        /*
-        if($loginResetPathId != null) {
-            $this->loginResetPath = $path->getPath($loginResetPathId);
-        }
-         */
-
-
         parent::__construct($pathId);
         $this->template = $template;
         $this->database = $database;

@@ -30,6 +30,7 @@ use SFW2\Authority\User;
 use SFW2\Controllers\Widget\Obfuscator\EMail;
 use SFW2\Controllers\Controller\Helper\DateTimeHelperTrait;
 use SFW2\Controllers\Controller\Helper\EMailHelperTrait;
+use SFW2\Controllers\Controller\Helper\ImageHelperTrait;
 
 use SFW2\Core\Database;
 use SFW2\Core\Config;
@@ -38,36 +39,14 @@ class EditableContent extends AbstractController {
 
     use DateTimeHelperTrait;
     use EMailHelperTrait;
+    use ImageHelperTrait;
 
-    /**
-     * @var Database
-     */
-    protected $database;
-
-    /**
-     * @var Config
-     */
-    protected $config;
-
-    /**
-     * @var User
-     */
-    protected $user;
-
-    /**
-     * @var string
-     */
-    protected $title;
-
-    /**
-     * @var boolean
-     */
-    protected $showEditor;
-
-    /**
-     * @var boolean
-     */
-    protected $showModificationDate;
+    protected Database $database;
+    protected Config $config;
+    protected User $user;
+    protected string $title;
+    protected bool $showEditor;
+    protected bool $showModificationDate;
 
     public function __construct(int $pathId, Database $database, Config $config, User $user, bool $showEditor = true, bool $showModificationDate = true, string $title = '') {
         parent::__construct($pathId);
@@ -79,17 +58,15 @@ class EditableContent extends AbstractController {
         $this->showModificationDate = $showModificationDate;
     }
 
-    public function index($all = false) {
+    public function index(bool $all = false) : Content {
         unset($all);
         $content = new Content('SFW2\\Content\\EditableContent');
         $content->assign('showEditor', $this->showEditor);
         $content->appendJSFile('EditableContent.handlebars.js');
-        # Ask for permission
-        $content->appendJSFile('EditableContentForm.handlebars.js');
         return $content;
     }
 
-    public function read($all = false) {
+    public function read(bool $all = false) : Content {
         unset($all);
         $content = new Content('EditableContent');
 
@@ -106,14 +83,14 @@ class EditableContent extends AbstractController {
             $entry['id'      ] = $this->createDummy();
             $entry['date'    ] = $this->getShortDate();
             $entry['title'   ] = $this->title;
-            $entry['origin'  ] = '';
+            $entry['content' ] = '';
             $entry['replaced'] = '';
             $entry['author'  ] = '';
         } else {
             $entry['id'      ] = $row['Id'];
             $entry['date'    ] = $this->getShortDate($row['CreationDate']);
             $entry['title'   ] = $row['Title'] == '' ? $this->title : $row['Title'];
-            $entry['origin'  ] = $row['Content'];
+            $entry['content' ] = $row['Content'];
             $entry['replaced'] = $this->parseContent($row['Content']);
             $entry['author'  ] = $this->getShortName($row);
         }
@@ -139,7 +116,7 @@ class EditableContent extends AbstractController {
         return $this->database->insert($stmt, [$this->pathId, $this->user->getUserId()]);
     }
 
-    public function delete($all = false) {
+    public function delete(bool $all = false) : Content {
         $entryId = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
         if($entryId === false) {
             throw new ResolverException("invalid data given", ResolverException::INVALID_DATA_GIVEN);
@@ -152,6 +129,12 @@ class EditableContent extends AbstractController {
         if(!$this->database->delete($stmt, [$entryId, $this->pathId])) {
             throw new ResolverException("no entry found", ResolverException::NO_PERMISSION);
         }
+
+        $folder = $this->getImageFolder();
+        $files = glob($folder . '*');
+        foreach($files as $file) {
+            unlink($file);
+        }
         return new Content();
     }
 
@@ -163,8 +146,29 @@ class EditableContent extends AbstractController {
         return $this->modify($entryId, $all);
     }
 
-    public function create() {
+    public function create() : Content {
         return $this->modify();
+    }
+
+    public function addImage() : void {
+        $folder = $this->getImageFolder();
+        $file = $this->uploadImage($folder);
+
+        $this->generateThumb($file, $file, 350);
+
+        $data = [
+            "url" => "/" . $file
+        ];
+
+        header('Content-type: application/json');
+        echo json_encode($data);
+        die();
+
+       /*
+        {
+        "error": {
+            "message": "The image upload failed because the image was too big (max 1.5MB)."
+        }*/
     }
 
     protected function modify($entryId = null, bool $all = false) : Content {
@@ -172,7 +176,7 @@ class EditableContent extends AbstractController {
 
         $values = [
             'title' => [
-                'value' => $_POST['title'],
+                'value' => filter_input(INPUT_POST, 'title', FILTER_SANITIZE_FULL_SPECIAL_CHARS),
                 'hint' => ''
             ],
             'content' => [
@@ -197,6 +201,8 @@ class EditableContent extends AbstractController {
                 [$this->pathId, $this->user->getUserId(), $values['title']['value'], $values['content']['value']]
             );
         } else {
+            $folder = $this->getImageFolder();
+            $this->deleteAllUnneededImages($folder, $values['content']['value']);
             $stmt =
                 "UPDATE `{TABLE_PREFIX}_content` SET " .
                 "`CreationDate` = NOW(), " .
@@ -210,25 +216,17 @@ class EditableContent extends AbstractController {
             }
 
             $data = [$this->user->getUserId(), $values['title']['value'], $values['content']['value'], $entryId, $this->pathId];
-
-            if($this->database->update($stmt, $data) == 0) {
-                throw new ResolverException("no entry found", ResolverException::NO_PERMISSION);
-            }
+            $this->database->update($stmt, $data);
         }
 
-        $content->assign('date',     ['value' => $this->getShortDate()]);
-        $content->assign('author',   ['value' => $this->getEMailByUser($this->user, $this->title)]);
-        $content->assign('id',       ['value' => $entryId]);
+        $content->assign('date',                 ['value' => $this->getShortDate()]);
+        $content->assign('author',               ['value' => $this->getEMailByUser($this->user, $this->title)]);
+        $content->assign('id',                   ['value' => $entryId]);
+        $content->assign('showModificationDate', ['value' => $this->showModificationDate]);
+        $content->assign('replaced',             ['value' => $this->parseContent($values['content']['value'])]);
+
         $content->dataWereModified();
         return $content;
-    }
-
-    protected function getShortName(array $data) : string {
-        if(empty($data['Email'])) {
-            return $data['FirstName'] . ' ' . $data['LastName'];
-        }
-
-        return (string)(new EMail($data['Email'], $data['FirstName'] . ' ' . $data['LastName']));
     }
 
     protected function parseContent($content) : string {

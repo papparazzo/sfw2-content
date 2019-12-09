@@ -45,19 +45,11 @@ class Blog extends AbstractController {
     use ImageHelperTrait;
     use EMailHelperTrait;
 
-    /**
-     * @var Database
-     */
-    protected $database;
+    protected Database $database;
+    protected User $user;
+    protected string $title;
 
-    /**
-     * @var User
-     */
-    protected $user;
-
-    protected $title;
-
-    public function __construct(int $pathId, Database $database, User $user, string $title = null) {
+    public function __construct(int $pathId, Database $database, User $user, string $title = '') {
         parent::__construct($pathId);
         $this->database = $database;
         $this->user = $user;
@@ -69,11 +61,11 @@ class Blog extends AbstractController {
         $content = new Content('SFW2\\Content\\Blog');
         $content->appendJSFile('Blog.handlebars.js');
         $content->assign('divisions', $this->getDivisions());
-        $content->assign('title', (string)$this->title);
+        $content->assign('title', $this->title);
         return $content;
     }
 
-    public function read(bool $all = false) {
+    public function read(bool $all = false) : Content {
         $content = new Content('Blog');
         $entries = [];
 
@@ -132,37 +124,65 @@ class Blog extends AbstractController {
         return $content;
     }
 
-    public function delete(bool $all = false) {
+    public function delete(bool $all = false) : Content {
         $entryId = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
         if($entryId === false) {
             throw new ResolverException("invalid data given", ResolverException::INVALID_DATA_GIVEN);
         }
+
+        $stmtAdd = '';
+        if(!$all) {
+            $stmtAdd = "AND `UserId` = '" . $this->database->escape($this->user->getUserId()) . "'";
+        }
+
+        $stmt = "SELECT `blog`.`Content` FROM `{TABLE_PREFIX}_blog` AS `blog` WHERE `Id` = '%s' AND `PathId` = '%s' ";
+        $ctnt = $this->database->selectSingle($stmt . $stmtAdd, [$entryId, $this->pathId]);
+
+        $folder = $this->getImageFolder();
+        $this->deleteAllUnneededImages($folder, $ctnt, false);
+
         $stmt = "DELETE FROM `{TABLE_PREFIX}_blog` WHERE `Id` = '%s' AND `PathId` = '%s'";
 
-        if(!$all) {
-            $stmt .= "AND `UserId` = '" . $this->database->escape($this->user->getUserId()) . "'";
-        }
-        if(!$this->database->delete($stmt, [$entryId, $this->pathId])) {
+        if(!$this->database->delete($stmt . $stmtAdd, [$entryId, $this->pathId])) {
             throw new ResolverException("no entry found", ResolverException::NO_PERMISSION);
         }
         return new Content();
     }
 
-    public function update(bool $all = false) {
+    public function update(bool $all = false) : Content {
         $entryId = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
         if($entryId === false) {
             throw new ResolverException("invalid data given", ResolverException::INVALID_DATA_GIVEN);
         }
-        return $this->modify($entryId);
+        return $this->modify($entryId, $all);
     }
 
     public function create() {
         return $this->modify();
     }
 
-    protected function modify($entryId = null, bool $all = false) {
-        $content = new Content('Blog');
+    public function addImage() : void {
+        $folder = $this->getImageFolder();
+        $file = $this->uploadImage($folder);
 
+        $this->generateThumb($file, $file, 175);
+        $data = [
+            "url" => "/" . $file
+        ];
+
+        header('Content-type: application/json');
+        echo json_encode($data);
+        die();
+
+       /*
+        {
+        "error": {
+            "message": "The image upload failed because the image was too big (max 1.5MB)."
+        }*/
+    }
+
+    protected function modify($entryId = null, bool $all = false) : Content {
+        $content = new Content('Blog');
 
         $rulset = new Ruleset();
         $rulset->addNewRules('title', new IsNotEmpty());
