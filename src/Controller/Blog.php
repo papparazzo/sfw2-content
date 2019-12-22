@@ -56,7 +56,7 @@ class Blog extends AbstractController {
         $this->title = $title;
     }
 
-    public function index(bool $all = false) {
+    public function index(bool $all = false) : Content {
         unset($all);
         $content = new Content('SFW2\\Content\\Blog');
         $content->appendJSFile('Blog.handlebars.js');
@@ -157,7 +157,7 @@ class Blog extends AbstractController {
         return $this->modify($entryId, $all);
     }
 
-    public function create() {
+    public function create() : Content {
         return $this->modify();
     }
 
