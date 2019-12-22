@@ -104,7 +104,7 @@ class EditableContent extends AbstractController {
         return $content;
     }
 
-    protected function createDummy() {
+    protected function createDummy() : int {
         $stmt =
             "INSERT INTO `{TABLE_PREFIX}_content` SET " .
             "`PathId` = '%s', " .
@@ -138,7 +138,7 @@ class EditableContent extends AbstractController {
         return new Content();
     }
 
-    public function update(bool $all = false) {
+    public function update(bool $all = false) : Content {
         $entryId = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
         if($entryId === false) {
             throw new ResolverException("invalid data given", ResolverException::INVALID_DATA_GIVEN);
@@ -229,7 +229,7 @@ class EditableContent extends AbstractController {
         return $content;
     }
 
-    protected function parseContent($content) : string {
+    protected function parseContent(string $content) : string {
         $content = str_replace('{{chairman}}', $this->getChairman(), $content);
         $content = str_replace('{{webmaster}}', $this->getWebMasterEMailAddress(), $content);
         return $content;

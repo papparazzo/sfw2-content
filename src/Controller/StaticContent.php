@@ -49,7 +49,8 @@ class StaticContent extends AbstractController {
         $this->templateData = $templateData;
     }
 
-    public function index($all = false) : Content {
+    public function index(bool $all = false) : Content {
+        unset($all);
         $email = $this->config->getVal('project', 'eMailWebMaster');
         $content = new Content($this->template);
         $content->assign('chairman', $this->getChairman());
