@@ -34,6 +34,10 @@ use SFW2\Controllers\Controller\Helper\DateTimeHelperTrait;
 use SFW2\Controllers\Controller\Helper\EMailHelperTrait;
 use SFW2\Controllers\Controller\Helper\ImageHelperTrait;
 
+use SFW2\Validator\Ruleset;
+use SFW2\Validator\Validator;
+use SFW2\Validator\Validators\IsUrl;
+
 use Exception;
 
 class Poster extends AbstractController {
@@ -65,7 +69,8 @@ class Poster extends AbstractController {
         $content = new Content('SFW2\\Content\\Poster');
 
         $stmt =
-            "SELECT `poster`.`Id`, `CreationDate`, `user`.`FirstName`, `user`.`LastName`, `Email`, `FileName`, `Title` " .
+            "SELECT `poster`.`Id`, `CreationDate`, `user`.`FirstName`, `user`.`LastName`, " .
+            "`Email`, `FileName`, `Title`, `Link` " .
             "FROM `{TABLE_PREFIX}_poster` AS `poster` " .
             "LEFT JOIN `{TABLE_PREFIX}_user` AS `user` ON `user`.`Id` = `poster`.`UserId` " .
             "WHERE `poster`.`PathId` = '%s' " .
@@ -75,10 +80,12 @@ class Poster extends AbstractController {
         if(empty($row)) {
             $content->assign('title',  $this->title);
             $content->assign('file',   '');
+            $content->assign('link',   '');
         } else {
             $content->assign('date',   $this->getShortDate($row['CreationDate']));
             $content->assign('title',  $row['Title'] == '' ? $this->title : $row['Title']);
             $content->assign('file',   $row['FileName']);
+            $content->assign('link',   $row['Link']);
             $content->assign('author', $this->getShortName($row));
             $content->assign('id',     $row['Id']);
         }
@@ -90,11 +97,25 @@ class Poster extends AbstractController {
 
         $validateOnly = filter_input(INPUT_POST, 'validateOnly', FILTER_VALIDATE_BOOLEAN);
 
-        if($validateOnly) {
+        $rulset = new Ruleset();
+        $rulset->addNewRules('link', new IsUrl(IsUrl::WITH_HTTP_OR_HTTPS));
+
+        $values = [];
+
+        $validator = new Validator($rulset);
+        $error = $validator->validate($_POST, $values);
+        $content->assignArray($values);
+
+        if(!$error) {
+            $content->setError(true);
+        }
+
+        if($validateOnly || !$error) {
             return $content;
         }
 
         $title = filter_input(INPUT_POST, 'title', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+        $link  = $values['link']['value'];
 
         $this->delete();
 
@@ -106,14 +127,16 @@ class Poster extends AbstractController {
             "`PathId` = '%s', ".
             "`UserId` = '%s', " .
             "`Title` = '%s', " .
+            "`Link` = '%s', " .
             "`FileName` = '%s' ";
 
-        $id = $this->database->insert(
+        $this->database->insert(
             $stmt,
             [
                 $this->pathId,
                 $this->user->getUserId(),
                 $title,
+                $link,
                 $fileName
             ]
         );
