@@ -62,6 +62,8 @@ class Blog extends AbstractController {
         $content->appendJSFile('Blog.handlebars.js');
         $content->assign('divisions', $this->getDivisions());
         $content->assign('title', $this->title);
+        $content->appendCSSFile('lightbox.min.css');
+        $content->appendJSFile('lightbox.min.js');
         return $content;
     }
 
@@ -136,7 +138,7 @@ class Blog extends AbstractController {
         }
 
         $stmt = "SELECT `blog`.`Content` FROM `{TABLE_PREFIX}_blog` AS `blog` WHERE `Id` = '%s' AND `PathId` = '%s' ";
-        $ctnt = $this->database->selectSingle($stmt . $stmtAdd, [$entryId, $this->pathId]);
+        $ctnt = (string)$this->database->selectSingle($stmt . $stmtAdd, [$entryId, $this->pathId]);
 
         $folder = $this->getImageFolder();
         $this->deleteAllUnneededImages($folder, $ctnt, false);
