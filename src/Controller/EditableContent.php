@@ -63,6 +63,8 @@ class EditableContent extends AbstractController {
         $content = new Content('SFW2\\Content\\EditableContent');
         $content->assign('showEditor', $this->showEditor);
         $content->appendJSFile('EditableContent.handlebars.js');
+        $content->appendCSSFile('lightbox.min.css');
+        $content->appendJSFile('lightbox.min.js');
         return $content;
     }
 
@@ -180,7 +182,7 @@ class EditableContent extends AbstractController {
                 'hint' => ''
             ],
             'content' => [
-                'value' => $_POST['content'],
+                'value' => filter_input(INPUT_POST, 'content'),
                 'hint' => ''
             ]
         ];
