@@ -3,8 +3,23 @@
     "type": "library",
     "license": "GNU AFFERO GENERAL PUBLIC LICENSE Version 3",
 
+     "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/papparazzo/sfw2-validator.git"
+        }, {
+            "type": "vcs",
+            "url": "https://github.com/papparazzo/sfw2-routing.git"
+        }
+    ],
+
     "require": {
-        "php": "^8.2"
+        "php": "^8.2",
+
+        "sfw2/routing": "^7.0",
+        "sfw2/validator": "^6.0",
+
+        "psr/http-message": "^2.0"
     },
     "autoload": {
         "psr-4": {
