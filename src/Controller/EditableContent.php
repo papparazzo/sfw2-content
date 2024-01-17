@@ -22,8 +22,11 @@
 
 namespace SFW2\Content\Controller;
 
+use Psr\Http\Message\ResponseInterface as Response;
+use Psr\Http\Message\ServerRequestInterface as Request;
 use SFW2\Routing\AbstractController;
-use SFW2\Routing\Resolver\ResolverException;
+
+use SFW2\Routing\ResponseEngine;
 use SFW2\Routing\Result\Content;
 use SFW2\Authority\User;
 
@@ -58,7 +61,8 @@ class EditableContent extends AbstractController {
         $this->showModificationDate = $showModificationDate;
     }
 
-    public function index(bool $all = false) : Content {
+    public function index(Request $request, ResponseEngine $responseEngine): Response
+    {
         unset($all);
         $content = new Content('SFW2\\Content\\EditableContent');
         $content->assign('showEditor', $this->showEditor);
@@ -68,7 +72,8 @@ class EditableContent extends AbstractController {
         return $content;
     }
 
-    public function read(bool $all = false) : Content {
+    public function read(Request $request, ResponseEngine $responseEngine): Response
+    {
         unset($all);
         $content = new Content('EditableContent');
 
@@ -118,7 +123,8 @@ class EditableContent extends AbstractController {
         return $this->database->insert($stmt, [$this->pathId, $this->user->getUserId()]);
     }
 
-    public function delete(bool $all = false) : Content {
+    public function delete(Request $request, ResponseEngine $responseEngine): Response
+    {
         $entryId = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
         if($entryId === false) {
             throw new ResolverException("invalid data given", ResolverException::INVALID_DATA_GIVEN);
@@ -140,7 +146,8 @@ class EditableContent extends AbstractController {
         return new Content();
     }
 
-    public function update(bool $all = false) : Content {
+    public function update(Request $request, ResponseEngine $responseEngine): Response
+    {
         $entryId = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
         if($entryId === false) {
             throw new ResolverException("invalid data given", ResolverException::INVALID_DATA_GIVEN);
@@ -148,7 +155,8 @@ class EditableContent extends AbstractController {
         return $this->modify($entryId, $all);
     }
 
-    public function create() : Content {
+    public function create(Request $request, ResponseEngine $responseEngine): Response
+    {
         return $this->modify();
     }
 
