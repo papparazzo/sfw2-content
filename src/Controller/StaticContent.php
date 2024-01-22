@@ -30,18 +30,15 @@ use SFW2\Controllers\Widget\Obfuscator\EMail;
 use SFW2\Core\Database;
 use SFW2\Core\Config;
 
-class StaticContent extends AbstractController {
-
-    protected Database $database;
+class StaticContent extends AbstractController
+{
     protected Config $config;
     protected string $template;
     protected array $templateData;
     protected string $title;
 
-    public function __construct(
-        int $pathId, Database $database, Config $config, string $template, array $templateData = [], string $title = ''
-    ) {
-        parent::__construct($pathId);
+    public function __construct(Config $config, string $template, array $templateData = [], string $title = '')
+    {
         $this->template = $template;
         $this->database = $database;
         $this->config = $config;
@@ -49,8 +46,10 @@ class StaticContent extends AbstractController {
         $this->templateData = $templateData;
     }
 
-    public function index(bool $all = false) : Content {
-        unset($all);
+    public function index(Request $request, ResponseEngine $responseEngine): Response
+    {
+        return $responseEngine->render(request: $request, template: $this->template);
+        /*
         $email = $this->config->getVal('project', 'eMailWebMaster');
         $content = new Content($this->template);
         $content->assign('chairman', $this->getChairman());
@@ -58,20 +57,6 @@ class StaticContent extends AbstractController {
         $content->assign('title', $this->title);
         $content->assign('pathId', $this->pathId);
         $content->assignArray($this->templateData);
-        return $content;
-    }
-
-    protected function getChairman() {
-        $stmt =
-            "SELECT CONCAT(IF(`user`.`Sex` = 'MALE', 'Herr ', 'Frau '), `user`.`FirstName`, ' ', `user`. `LastName`) AS `Chairman` " .
-            "FROM `{TABLE_PREFIX}_position` AS `position` " .
-            "LEFT JOIN `{TABLE_PREFIX}_division` AS `division` " .
-            "ON `division`.`Id` = `position`.`DivisionId` " .
-            "LEFT JOIN `{TABLE_PREFIX}_user` AS `user` " .
-            "ON `user`.`Id` = `position`.`UserId` " .
-            "WHERE `position`.`Order` = '1' " .
-            "AND `division`.`Position` = '0' ";
-
-        return $this->database->selectSingle($stmt);
+        */
     }
 }
