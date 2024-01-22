@@ -38,7 +38,8 @@ use SFW2\Validator\Validator;
 use SFW2\Validator\Validators\IsNotEmpty;
 use SFW2\Validator\Validators\IsOneOf;
 
-class Blog extends AbstractController {
+class Blog extends AbstractController
+{
 
     use GetDivisionTrait;
     use DateTimeHelperTrait;
@@ -56,18 +57,21 @@ class Blog extends AbstractController {
         $this->title = $title;
     }
 
-    public function index(bool $all = false) : Content {
-        unset($all);
+    public function index(Request $request, ResponseEngine $responseEngine): Response
+    {
+
         $content = new Content('SFW2\\Content\\Blog');
         $content->appendJSFile('Blog.handlebars.js');
         $content->assign('divisions', $this->getDivisions());
         $content->assign('title', $this->title);
         $content->appendCSSFile('lightbox.min.css');
         $content->appendJSFile('lightbox.min.js');
-        return $content;
+
+        return $responseEngine->render($request, $content, 'SFW2\\Content\\Blog');
     }
 
-    public function read(bool $all = false) : Content {
+    public function read(Request $request, ResponseEngine $responseEngine): Response
+    {
         $content = new Content('Blog');
         $entries = [];
 
@@ -126,7 +130,8 @@ class Blog extends AbstractController {
         return $content;
     }
 
-    public function delete(bool $all = false) : Content {
+    public function delete(Request $request, ResponseEngine $responseEngine): Response
+    {
         $entryId = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
         if($entryId === false) {
             throw new ResolverException("invalid data given", ResolverException::INVALID_DATA_GIVEN);
@@ -151,7 +156,8 @@ class Blog extends AbstractController {
         return new Content();
     }
 
-    public function update(bool $all = false) : Content {
+    public function update(Request $request, ResponseEngine $responseEngine): Response
+    {
         $entryId = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
         if($entryId === false) {
             throw new ResolverException("invalid data given", ResolverException::INVALID_DATA_GIVEN);
@@ -159,7 +165,8 @@ class Blog extends AbstractController {
         return $this->modify($entryId, $all);
     }
 
-    public function create() : Content {
+    public function create(Request $request, ResponseEngine $responseEngine): Response
+    {
         return $this->modify();
     }
 
@@ -223,8 +230,8 @@ class Blog extends AbstractController {
                 ]
             );
         } else {
-            $stmt =
-                "UPDATE `{TABLE_PREFIX}_blog` " .
+            $stmt = /** @lang MySQL */
+                "UPDATE `{TABLE_PREFIX}_content_blog` " .
                 "SET `CreationDate` = NOW(), " .
                 "`Title` = '%s', " .
                 "`Content` = '%s', " .
