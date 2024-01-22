@@ -81,7 +81,7 @@ class EditableContent extends AbstractController {
             "SELECT `content`.`Id`, `CreationDate`, `user`.`FirstName`, `user`.`LastName`, `Email`, `Content`, `Title` " .
             "FROM `{TABLE_PREFIX}_content` AS `content` " .
             "LEFT JOIN `{TABLE_PREFIX}_user` AS `user` ON `user`.`Id` = `content`.`UserId` " .
-            "WHERE `content`.`PathId` = '%s' " .
+            "WHERE `content`.`PathId` = %s " .
             "ORDER BY `Id` DESC ";
 
         $row = $this->database->selectRow($stmt, [$this->pathId]);
@@ -114,7 +114,7 @@ class EditableContent extends AbstractController {
     protected function createDummy() : int {
         $stmt =
             "INSERT INTO `{TABLE_PREFIX}_content` SET " .
-            "`PathId` = '%s', " .
+            "`PathId` = %s, " .
             "`CreationDate` = NOW(), " .
             "`UserId` = '%d', " .
             "`Title` = '', " .
@@ -129,7 +129,7 @@ class EditableContent extends AbstractController {
         if($entryId === false) {
             throw new ResolverException("invalid data given", ResolverException::INVALID_DATA_GIVEN);
         }
-        $stmt = "DELETE FROM `{TABLE_PREFIX}_content` WHERE `Id` = '%s' AND `PathId` = '%s'";
+        $stmt = "DELETE FROM `{TABLE_PREFIX}_content` WHERE `Id` = %s AND `PathId` = %s";
 
         if(!$all) {
             $stmt .= "AND `UserId` = '" . $this->database->escape($this->user->getUserId()) . "'";
@@ -200,11 +200,11 @@ class EditableContent extends AbstractController {
         if(is_null($entryId)) {
             $stmt =
                 "INSERT INTO `{TABLE_PREFIX}_content` SET " .
-                "`PathId` = '%s', " .
+                "`PathId` = %s, " .
                 "`CreationDate` = NOW(), " .
                 "`UserId` = '%d', " .
-                "`Title` = '%s', " .
-                "`Content` = '%s' ";
+                "`Title` = %s, " .
+                "`Content` = %s ";
 
             $entryId = $this->database->insert(
                 $stmt,
@@ -216,10 +216,10 @@ class EditableContent extends AbstractController {
             $stmt =
                 "UPDATE `{TABLE_PREFIX}_content` SET " .
                 "`CreationDate` = NOW(), " .
-                "`UserId` = '%d', " .
-                "`Title` = '%s', " .
-                "`Content` = '%s' " .
-                "WHERE `Id` = '%s' AND `PathId` = '%s' ";
+                "`UserId` = %d, " .
+                "`Title` = %s, " .
+                "`Content` = %s " .
+                "WHERE `Id` = %s AND `PathId` = %s ";
 
             if(!$all) {
                 $stmt .= "AND `UserId` = '" . $this->database->escape($this->user->getUserId()) . "'";
@@ -251,7 +251,7 @@ class EditableContent extends AbstractController {
     }
 
     protected function getChairman() : string {
-        $stmt =
+        $stmt = /** @lang MySQL */
             "SELECT CONCAT(IF(`user`.`Sex` = 'MALE', 'Herr ', 'Frau '), `user`.`FirstName`, ' ', `user`. `LastName`) AS `Chairman` " .
             "FROM `{TABLE_PREFIX}_position` AS `position` " .
             "LEFT JOIN `{TABLE_PREFIX}_division` AS `division` " .
