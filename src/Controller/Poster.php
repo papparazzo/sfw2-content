@@ -64,9 +64,8 @@ class Poster extends AbstractController {
         $this->title = $title;
     }
 
-    public function index(bool $all = false) : Content {
-        unset($all);
-        $content = new Content('SFW2\\Content\\Poster');
+    public function index(Request $request, ResponseEngine $responseEngine): Response
+    {
 
         $stmt =
             "SELECT `poster`.`Id`, `CreationDate`, `user`.`FirstName`, `user`.`LastName`, " .
@@ -89,11 +88,12 @@ class Poster extends AbstractController {
             $content->assign('author', $this->getShortName($row));
             $content->assign('id',     $row['Id']);
         }
-        return $content;
+        return $responseEngine->render($request, [], 'SFW2\\Content\\Poster');
     }
 
-    public function create() : Content {
-        $content = new Content('Poster');
+    public function create(Request $request, ResponseEngine $responseEngine): Response
+    {
+        $pathId = $this->getPathId($request);
 
         $validateOnly = filter_input(INPUT_POST, 'validateOnly', FILTER_VALIDATE_BOOLEAN);
 
@@ -133,41 +133,52 @@ class Poster extends AbstractController {
         $this->database->insert(
             $stmt,
             [
-                $this->pathId,
+                $pathId,
                 $this->user->getUserId(),
                 $title,
                 $link,
                 $fileName
             ]
         );
-        return $content;
+        return $responseEngine->render($request, [], 'Poster');
     }
 
-    public function delete(bool $all = false) : Redirect {
-        $file = 'img' . DIRECTORY_SEPARATOR . $this->pathId . DIRECTORY_SEPARATOR . self::FILE_NAME;
+    /**
+     * @throws HttpInternalServerError
+     * @throws HttpNotFound
+     */
+    public function delete(Request $request, ResponseEngine $responseEngine): Response
+    {
+        $pathId = $this->getPathId($request);
+
+        $file = 'img' . DIRECTORY_SEPARATOR . $pathId . DIRECTORY_SEPARATOR . self::FILE_NAME;
         if(is_file($file) && !unlink($file)) {
-            throw new ResolverException("could not delete file <$file>", ResolverException::INVALID_DATA_GIVEN);
+            throw new HttpInternalServerError("could not delete file <$file>");
         }
 
         $entryId = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
         if($entryId === false) {
-            throw new ResolverException("invalid data given", ResolverException::INVALID_DATA_GIVEN);
+            throw new HttpInternalServerError("invalid data given");
         }
         $stmt = "DELETE FROM `{TABLE_PREFIX}_poster` WHERE `Id` = '%s' AND `PathId` = '%s'";
 
-        if(!$all) {
-            $stmt .= "AND `UserId` = '" . $this->database->escape($this->user->getUserId()) . "'";
-        }
-        $this->database->delete($stmt, [$entryId, $this->pathId]);
-        return new Redirect();
+        #if(!$all) {
+        #    $stmt .= "AND `UserId` = '" . $this->database->escape($this->user->getUserId()) . "'";
+        #}
+        $this->database->delete($stmt, [$entryId, $pathId]);
+        return $responseEngine->render($request);
     }
 
-    public function read(bool $all = false) : Content {
-        return new Content();
+    public function read(Request $request, ResponseEngine $responseEngine): Response
+    {
+        return $responseEngine->render($request);
     }
 
-    protected function addFile() : string {
-        $folder = 'img' . DIRECTORY_SEPARATOR . $this->pathId . DIRECTORY_SEPARATOR;
+    /**
+     * @throws Exception
+     */
+    protected function addFile(int $pathId) : string {
+        $folder = 'img' . DIRECTORY_SEPARATOR . $pathId . DIRECTORY_SEPARATOR;
 
         if(!isset($_POST['file'])) {
             throw new Exception("file not set");
