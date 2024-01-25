@@ -10,6 +10,9 @@
         }, {
             "type": "vcs",
             "url": "https://github.com/papparazzo/sfw2-routing.git"
+        }, {
+            "type": "vcs",
+            "url": "https://github.com/papparazzo/sfw2-database.git"
         }
     ],
 
@@ -18,6 +21,7 @@
 
         "sfw2/routing": "^7.0",
         "sfw2/validator": "^6.0",
+        "sfw2/database": "^3.0",
 
         "psr/http-message": "^2.0"
     },
