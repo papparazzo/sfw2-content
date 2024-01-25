@@ -22,33 +22,25 @@
 
 namespace SFW2\Content\Controller;
 
+use Psr\Http\Message\ResponseInterface as Response;
+use Psr\Http\Message\ServerRequestInterface as Request;
 use SFW2\Routing\AbstractController;
-use SFW2\Routing\Result\Content;
 
-use SFW2\Controllers\Widget\Obfuscator\EMail;
-
-use SFW2\Core\Database;
-use SFW2\Core\Config;
+use SFW2\Routing\ResponseEngine;
 
 class StaticContent extends AbstractController
 {
-    protected Config $config;
-    protected string $template;
-    protected array $templateData;
-    protected string $title;
-
-    public function __construct(Config $config, string $template, array $templateData = [], string $title = '')
+    public function __construct(
+        protected string $template,
+        protected array $templateData = [],
+        protected string $title = ''
+    )
     {
-        $this->template = $template;
-        $this->database = $database;
-        $this->config = $config;
-        $this->title = $title;
-        $this->templateData = $templateData;
     }
 
     public function index(Request $request, ResponseEngine $responseEngine): Response
     {
-        return $responseEngine->render(request: $request, template: $this->template);
+        return $responseEngine->render($request, $this->templateData, $this->template);
         /*
         $email = $this->config->getVal('project', 'eMailWebMaster');
         $content = new Content($this->template);
