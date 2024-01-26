@@ -44,6 +44,7 @@ use SFW2\Validator\Validators\IsOneOf;
 
 class Blog extends AbstractController
 {
+    use getRoutingDataTrait;
 
     use GetDivisionTrait;
     use DateTimeHelperTrait;
@@ -75,7 +76,8 @@ class Blog extends AbstractController
 
     public function read(Request $request, ResponseEngine $responseEngine): Response
     {
-        $content = new Content('Blog');
+        $pathId = $this->getPathId($request);
+        $content = [];
         $entries = [];
 
         $count = (int)filter_input(INPUT_GET, 'count', FILTER_VALIDATE_INT);
@@ -83,7 +85,7 @@ class Blog extends AbstractController
 
         $count = $count ? $count : 5;
 
-        $stmt =
+        $stmt = /** @lang MySQL */
             "SELECT `blog`.`Id`, `blog`.`CreationDate`, " .
             "`user`.`Email`, `blog`.`Content`, " .
             "`blog`.`Title`, `user`.`FirstName`, `user`.`LastName`, " .
@@ -156,7 +158,7 @@ class Blog extends AbstractController
         if(!$this->database->delete($stmt . $stmtAdd, [$entryId, $this->pathId])) {
             throw new ResolverException("no entry found", ResolverException::NO_PERMISSION);
         }
-        return new Content();
+        return $responseEngine->render($request, [], 'SFW2\\Content\\Blog');
     }
 
     public function update(Request $request, ResponseEngine $responseEngine): Response
