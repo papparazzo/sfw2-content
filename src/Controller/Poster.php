@@ -53,15 +53,12 @@ class Poster extends AbstractController {
     use EMailHelperTrait;
     use ImageHelperTrait;
 
-    protected Database $database;
-    protected User $user;
-    protected string $title;
 
-    public function __construct(int $pathId, Database $database, User $user, string $title = '') {
-        parent::__construct($pathId);
-        $this->database = $database;
-        $this->user = $user;
-        $this->title = $title;
+    public function __construct(
+        protected DatabaseInterface $database,
+        protected string $title = ''
+    )
+    {
     }
 
     public function index(Request $request, ResponseEngine $responseEngine): Response
