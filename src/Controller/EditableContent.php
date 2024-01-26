@@ -35,10 +35,9 @@ use SFW2\Controllers\Controller\Helper\DateTimeHelperTrait;
 use SFW2\Controllers\Controller\Helper\EMailHelperTrait;
 use SFW2\Controllers\Controller\Helper\ImageHelperTrait;
 
-use SFW2\Core\Database;
-use SFW2\Core\Config;
-
 class EditableContent extends AbstractController {
+
+    use getRoutingDataTrait;
 
     use DateTimeHelperTrait;
     use EMailHelperTrait;
