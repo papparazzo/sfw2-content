@@ -122,19 +122,24 @@ class EditableContent extends AbstractController {
         return $this->database->insert($stmt, [$this->pathId, $this->user->getUserId()]);
     }
 
+    /**
+     * @throws HttpBadRequest
+     * @throws HttpNotFound
+     */
     public function delete(Request $request, ResponseEngine $responseEngine): Response
     {
         $entryId = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
         if($entryId === false) {
-            throw new ResolverException("invalid data given", ResolverException::INVALID_DATA_GIVEN);
+            throw new HttpBadRequest("invalid entry-id given");
         }
         $stmt = "DELETE FROM `{TABLE_PREFIX}_content` WHERE `Id` = %s AND `PathId` = %s";
 
         if(!$all) {
             $stmt .= "AND `UserId` = '" . $this->database->escape($this->user->getUserId()) . "'";
         }
-        if(!$this->database->delete($stmt, [$entryId, $this->pathId])) {
-            throw new ResolverException("no entry found", ResolverException::NO_PERMISSION);
+        $pathId = $this->getPathId($request);
+        if(!$this->database->delete($stmt, [$entryId, $pathId])) {
+            throw new HttpNotFound("no entry found for id <$entryId>");
         }
 
         $folder = $this->getImageFolder();
