@@ -29,6 +29,7 @@ use SFW2\Database\DatabaseInterface;
 use SFW2\Routing\AbstractController;
 
 use SFW2\Authority\User;
+use SFW2\Routing\HelperTraits\getRoutingDataTrait;
 use SFW2\Routing\Resolver\ResolverException;
 use SFW2\Controllers\Controller\Helper\GetDivisionTrait;
 use SFW2\Controllers\Controller\Helper\DateTimeHelperTrait;
