@@ -153,11 +153,14 @@ class EditableContent extends AbstractController {
         return new Content();
     }
 
+    /**
+     * @throws HttpBadRequest
+     */
     public function update(Request $request, ResponseEngine $responseEngine): Response
     {
         $entryId = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
         if($entryId === false) {
-            throw new ResolverException("invalid data given", ResolverException::INVALID_DATA_GIVEN);
+            throw new HttpBadRequest("invalid entry-id given");
         }
         return $this->modify($entryId, $all);
     }
