@@ -73,10 +73,8 @@ class EditableContent extends AbstractController {
 
     public function read(Request $request, ResponseEngine $responseEngine): Response
     {
-        unset($all);
-        $content = new Content('EditableContent');
-
-        $stmt =
+        $content = [];
+        $stmt = /** @lang MySQL */
             "SELECT `content`.`Id`, `CreationDate`, `user`.`FirstName`, `user`.`LastName`, `Email`, `Content`, `Title` " .
             "FROM `{TABLE_PREFIX}_content` AS `content` " .
             "LEFT JOIN `{TABLE_PREFIX}_user` AS `user` ON `user`.`Id` = `content`.`UserId` " .
@@ -107,10 +105,15 @@ class EditableContent extends AbstractController {
         $content->assign('offset', 0);
         $content->assign('hasNext', false);
         $content->assign('entries', $entries);
-        return $content;
+        return $responseEngine->render($request, $content, 'SFW2\\Content\\EditableContent');
     }
 
-    protected function createDummy() : int {
+    /**
+     * @throws HttpNotFound
+     */
+    protected function createDummy(Request $request): int
+    {
+        $pathId = $this->getPathId($request);
         $stmt =
             "INSERT INTO `{TABLE_PREFIX}_content` SET " .
             "`PathId` = %s, " .
@@ -119,7 +122,7 @@ class EditableContent extends AbstractController {
             "`Title` = '', " .
             "`Content` = '' ";
 
-        return $this->database->insert($stmt, [$this->pathId, $this->user->getUserId()]);
+        return $this->database->insert($stmt, [$pathId, $this->user->getUserId()]);
     }
 
     /**
