@@ -59,8 +59,7 @@ class Blog extends AbstractController
 
     public function index(Request $request, ResponseEngine $responseEngine): Response
     {
-
-        $content = new Content('SFW2\\Content\\Blog');
+        $content = [];
         $content->appendJSFile('Blog.handlebars.js');
         $content->assign('divisions', $this->getDivisions());
         $content->assign('title', $this->title);
@@ -83,30 +82,25 @@ class Blog extends AbstractController
 
         $stmt = /** @lang MySQL */
             "SELECT `blog`.`Id`, `blog`.`CreationDate`, " .
-            "`user`.`Email`, `blog`.`Content`, " .
-            "`blog`.`Title`, `user`.`FirstName`, `user`.`LastName`, " .
-            "`division`.`Name` AS `Resource`, " .
-            "IF(`blog`.`UserId` = '%s', '1', '0') AS `OwnEntry` " .
+            "`blog`.`Content`, " .
+            "`blog`.`Title`, " .
+            "IF(`blog`.`UserId` = %s, '1', '0') AS `OwnEntry` " .
             "FROM `{TABLE_PREFIX}_blog` AS `blog` " .
-            "LEFT JOIN `{TABLE_PREFIX}_user` AS `user` " .
-            "ON `user`.`Id` = `blog`.`UserId` " .
-            "LEFT JOIN `{TABLE_PREFIX}_division` AS `division` " .
-            "ON `division`.`Id` = `blog`.`DivisionId` " .
-            "WHERE `PathId` = '%s' ";
+            "WHERE `PathId` = %s ";
 
         if($all) {
             $stmt .=
                 "ORDER BY `blog`.`Id` DESC ".
                 "LIMIT %s, %s ";
-            $rows = $this->database->select($stmt, [$this->user->getUserId(), $this->pathId, $start, $count]);
-            $cnt = $this->database->selectCount('{TABLE_PREFIX}_blog', "WHERE `PathId` = '%s'", [$this->pathId]);
+            $rows = $this->database->select($stmt, [$this->user->getUserId(), $pathId, $start, $count]);
+            $cnt = $this->database->selectCount('{TABLE_PREFIX}_blog', "WHERE `PathId` = %s", [$pathId]);
         } else {
             $stmt .=
-                "AND `UserId` = '%s' " .
+                "AND `UserId` = %s " .
                 "ORDER BY `blog`.`Id` DESC ".
                 "LIMIT %s, %s ";
-            $rows = $this->database->select($stmt, [$this->user->getUserId(), $this->pathId, $this->user->getUserId(), $start, $count]);
-            $cnt = $this->database->selectCount('{TABLE_PREFIX}_blog', "WHERE `PathId` = '%s' AND `UserId` = '%s'", [$this->pathId, $this->user->getUserId()]);
+            $rows = $this->database->select($stmt, [$this->user->getUserId(), $pathId, $this->user->getUserId(), $start, $count]);
+            $cnt = $this->database->selectCount('{TABLE_PREFIX}_blog', "WHERE `PathId` = %s AND `UserId` = '%s'", [$pathId, $this->user->getUserId()]);
         }
 
         foreach($rows as $row) {
