@@ -21,15 +21,15 @@
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 SET time_zone = "+00:00";
 
-CREATE TABLE `sfw2_blog` (
-  `Id` int(10) UNSIGNED NOT NULL,
-  `CreationDate` date NOT NULL,
-  `Title` varchar(50) COLLATE utf8_unicode_ci NOT NULL,
-  `Content` text COLLATE utf8_unicode_ci NOT NULL,
-  `UserId` int(10) UNSIGNED NOT NULL,
-  `PathId` int(10) UNSIGNED NOT NULL,
-  `DivisionId` int(11) NOT NULL
+CREATE TABLE `{TABLE_PREFIX}_blog` (
+    `Id` int(10) UNSIGNED NOT NULL,
+    `CreationDate` date NOT NULL,
+    `Title` varchar(50) COLLATE utf8_unicode_ci NOT NULL,
+    `Content` text COLLATE utf8_unicode_ci NOT NULL,
+    `UserId` int(10) UNSIGNED NOT NULL,
+    `PathId` int(10) UNSIGNED NOT NULL,
+    `DivisionId` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
-ALTER TABLE `sfw2_blog` ADD PRIMARY KEY (`Id`);
-ALTER TABLE `sfw2_blog` MODIFY `Id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
+ALTER TABLE `{TABLE_PREFIX}_blog` ADD PRIMARY KEY (`Id`);
+ALTER TABLE `{TABLE_PREFIX}_blog` MODIFY `Id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
