@@ -25,6 +25,7 @@ namespace SFW2\Content\Controller;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 
+use SFW2\Database\DatabaseInterface;
 use SFW2\Routing\AbstractController;
 
 use SFW2\Authority\User;
@@ -33,8 +34,6 @@ use SFW2\Controllers\Controller\Helper\GetDivisionTrait;
 use SFW2\Controllers\Controller\Helper\DateTimeHelperTrait;
 use SFW2\Controllers\Controller\Helper\ImageHelperTrait;
 use SFW2\Controllers\Controller\Helper\EMailHelperTrait;
-
-use SFW2\Core\Database;
 
 use SFW2\Routing\ResponseEngine;
 use SFW2\Validator\Ruleset;
@@ -51,14 +50,11 @@ class Blog extends AbstractController
     use ImageHelperTrait;
     use EMailHelperTrait;
 
-    protected Database $database;
-    protected User $user;
-    protected string $title;
 
-    public function __construct(int $pathId, Database $database, User $user, string $title = '') {
-        $this->database = $database;
-        $this->user = $user;
-        $this->title = $title;
+    public function __construct(
+        protected DatabaseInterface $database,
+        protected string $title = ''
+    ) {
     }
 
     public function index(Request $request, ResponseEngine $responseEngine): Response
