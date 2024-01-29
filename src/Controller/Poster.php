@@ -95,7 +95,7 @@ class Poster extends AbstractController {
         $validateOnly = filter_input(INPUT_POST, 'validateOnly', FILTER_VALIDATE_BOOLEAN);
 
         $rulset = new Ruleset();
-        $rulset->addNewRules('link', new IsUrl(IsUrl::WITH_HTTP_OR_HTTPS));
+        $rulset->addNewRules('link', new IsUrl(ProtocolTypeEnum::WITH_HTTP_OR_HTTPS));
 
         $values = [];
 
