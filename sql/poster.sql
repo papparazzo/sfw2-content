@@ -25,18 +25,18 @@ SET time_zone = "+00:00";
 -- Table structure for table `sfw2_poster`
 --
 
-CREATE TABLE `sfw2_poster` (
   `Id` int(10) UNSIGNED NOT NULL,
   `PathId` int(10) UNSIGNED NOT NULL,
   `CreationDate` date NOT NULL,
   `UserId` int(10) UNSIGNED NOT NULL,
   `Title` varchar(50) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
   `FileName` varchar(100) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL
+CREATE TABLE `{TABLE_PREFIX}_poster` (
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_german2_ci;
 
 --
 -- Indexes for table `sfw2_poster`
 --
-ALTER TABLE `sfw2_poster` ADD PRIMARY KEY (`Id`);
-ALTER TABLE `sfw2_poster` ADD UNIQUE( `PathId`);
-ALTER TABLE `sfw2_poster` MODIFY `Id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
+ALTER TABLE `{TABLE_PREFIX}_poster` ADD PRIMARY KEY (`Id`);
+ALTER TABLE `{TABLE_PREFIX}_poster` ADD UNIQUE( `PathId`);
+ALTER TABLE `{TABLE_PREFIX}_poster` MODIFY `Id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
