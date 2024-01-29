@@ -25,13 +25,13 @@ SET time_zone = "+00:00";
 -- Table structure for table `sfw2_poster`
 --
 
-  `Id` int(10) UNSIGNED NOT NULL,
-  `PathId` int(10) UNSIGNED NOT NULL,
-  `CreationDate` date NOT NULL,
-  `UserId` int(10) UNSIGNED NOT NULL,
-  `Title` varchar(50) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
-  `FileName` varchar(100) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL
 CREATE TABLE `{TABLE_PREFIX}_poster` (
+    `Id` int(10) UNSIGNED NOT NULL,
+    `PathId` int(10) UNSIGNED NOT NULL,
+    `CreationDate` date NOT NULL,
+    `UserId` int(10) UNSIGNED NOT NULL,
+    `Title` varchar(50) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
+    `FileName` varchar(100) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_german2_ci;
 
 --

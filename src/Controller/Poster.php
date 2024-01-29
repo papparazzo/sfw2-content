@@ -27,8 +27,6 @@ use SFW2\Routing\Resolver\ResolverException;
 use SFW2\Routing\Result\Content;
 use SFW2\Routing\Result\Redirect;
 
-use SFW2\Core\Database;
-use SFW2\Authority\User;
 
 use SFW2\Controllers\Controller\Helper\DateTimeHelperTrait;
 use SFW2\Controllers\Controller\Helper\EMailHelperTrait;
