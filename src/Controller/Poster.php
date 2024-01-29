@@ -121,11 +121,11 @@ class Poster extends AbstractController {
         $stmt =
             "REPLACE INTO `{TABLE_PREFIX}_poster` " .
             "SET `CreationDate` = NOW(), " .
-            "`PathId` = '%s', ".
-            "`UserId` = '%s', " .
-            "`Title` = '%s', " .
-            "`Link` = '%s', " .
-            "`FileName` = '%s' ";
+            "`PathId` = %s, ".
+            "`UserId` = %s, " .
+            "`Title` = %s, " .
+            "`Link` = %s, " .
+            "`FileName` = %s ";
 
         $this->database->insert(
             $stmt,
@@ -157,7 +157,7 @@ class Poster extends AbstractController {
         if($entryId === false) {
             throw new HttpInternalServerError("invalid data given");
         }
-        $stmt = "DELETE FROM `{TABLE_PREFIX}_poster` WHERE `Id` = '%s' AND `PathId` = '%s'";
+        $stmt = "DELETE FROM `{TABLE_PREFIX}_poster` WHERE `Id` = %s AND `PathId` = %s";
 
         #if(!$all) {
         #    $stmt .= "AND `UserId` = '" . $this->database->escape($this->user->getUserId()) . "'";
