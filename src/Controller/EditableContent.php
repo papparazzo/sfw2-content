@@ -24,11 +24,13 @@ namespace SFW2\Content\Controller;
 
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
+use SFW2\Core\HttpExceptions\HttpBadRequest;
+use SFW2\Core\HttpExceptions\HttpNotFound;
+use SFW2\Database\DatabaseInterface;
 use SFW2\Routing\AbstractController;
 
+use SFW2\Routing\HelperTraits\getRoutingDataTrait;
 use SFW2\Routing\ResponseEngine;
-use SFW2\Routing\Result\Content;
-use SFW2\Authority\User;
 
 use SFW2\Controllers\Widget\Obfuscator\EMail;
 use SFW2\Controllers\Controller\Helper\DateTimeHelperTrait;
@@ -50,11 +52,7 @@ class EditableContent extends AbstractController {
     protected bool $showEditor;
     protected bool $showModificationDate;
 
-    public function __construct(int $pathId, Database $database, Config $config, User $user, bool $showEditor = true, bool $showModificationDate = true, string $title = '') {
-        parent::__construct($pathId);
-        $this->database = $database;
-        $this->config = $config;
-        $this->user = $user;
+    public function __construct(protected DatabaseInterface $database, bool $showEditor = true, bool $showModificationDate = true, string $title = '') {
         $this->title = $title;
         $this->showEditor = $showEditor;
         $this->showModificationDate = $showModificationDate;
