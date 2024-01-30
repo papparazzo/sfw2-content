@@ -150,7 +150,7 @@ class EditableContent extends AbstractController {
         foreach($files as $file) {
             unlink($file);
         }
-        return new Content();
+        return $responseEngine->render($request);
     }
 
     /**
@@ -191,7 +191,8 @@ class EditableContent extends AbstractController {
         }*/
     }
 
-    protected function modify($entryId = null, bool $all = false) : Content {
+    protected function modify($entryId = null, bool $all = false): Response
+    {
         $content = new Content('EditableContent');
 
         $values = [
@@ -246,7 +247,7 @@ class EditableContent extends AbstractController {
         $content->assign('replaced',             ['value' => $this->parseContent($values['content']['value'])]);
 
         $content->dataWereModified();
-        return $content;
+        return $responseEngine->render($request, $content, 'SFW2\\Content\\EditableContent');
     }
 
     protected function parseContent(string $content) : string {
