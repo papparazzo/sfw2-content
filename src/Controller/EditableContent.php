@@ -45,7 +45,6 @@ class EditableContent extends AbstractController {
     use EMailHelperTrait;
     use ImageHelperTrait;
 
-    protected Database $database;
     protected Config $config;
     protected User $user;
     protected string $title;
@@ -60,13 +59,10 @@ class EditableContent extends AbstractController {
 
     public function index(Request $request, ResponseEngine $responseEngine): Response
     {
-        unset($all);
-        $content = new Content('SFW2\\Content\\EditableContent');
-        $content->assign('showEditor', $this->showEditor);
-        $content->appendJSFile('EditableContent.handlebars.js');
-        $content->appendCSSFile('lightbox.min.css');
-        $content->appendJSFile('lightbox.min.js');
-        return $content;
+        #$content->assign('showEditor', $this->showEditor);
+        $content = [];
+
+        return $responseEngine->render($request, $content, 'SFW2\\Content\\EditableContent');
     }
 
     public function read(Request $request, ResponseEngine $responseEngine): Response
