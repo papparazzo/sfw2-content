@@ -51,10 +51,14 @@ class EditableContent extends AbstractController {
     protected bool $showEditor;
     protected bool $showModificationDate;
 
-    public function __construct(protected DatabaseInterface $database, bool $showEditor = true, bool $showModificationDate = true, string $title = '') {
-        $this->title = $title;
-        $this->showEditor = $showEditor;
-        $this->showModificationDate = $showModificationDate;
+
+    public function __construct(
+        protected DatabaseInterface $database,
+        protected bool $showEditor = true,
+        protected bool $showModificationDate = true,
+        protected string $title = ''
+    )
+    {
     }
 
     public function index(Request $request, ResponseEngine $responseEngine): Response
