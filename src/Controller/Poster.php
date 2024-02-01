@@ -88,6 +88,10 @@ class Poster extends AbstractController {
         return $responseEngine->render($request, [], 'SFW2\\Content\\Poster');
     }
 
+    /**
+     * @throws HttpInternalServerError
+     * @throws HttpNotFound
+     */
     public function create(Request $request, ResponseEngine $responseEngine): Response
     {
         $pathId = $this->getPathId($request);
@@ -114,7 +118,7 @@ class Poster extends AbstractController {
         $title = filter_input(INPUT_POST, 'title', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
         $link  = $values['link']['value'];
 
-        $this->delete();
+        $this->delete($request);
 
         $fileName = $this->addFile();
 
