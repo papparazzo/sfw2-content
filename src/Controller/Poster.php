@@ -32,6 +32,7 @@ use SFW2\Controllers\Controller\Helper\DateTimeHelperTrait;
 use SFW2\Controllers\Controller\Helper\EMailHelperTrait;
 use SFW2\Controllers\Controller\Helper\ImageHelperTrait;
 
+use SFW2\Validator\Enumerations\ProtocolTypeEnum;
 use SFW2\Validator\Ruleset;
 use SFW2\Validator\Validator;
 use SFW2\Validator\Validators\IsUrl;
@@ -47,6 +48,7 @@ class Poster extends AbstractController {
 
     const DIMENSIONS = 800;
 
+    use getRoutingDataTrait;
     use DateTimeHelperTrait;
     use EMailHelperTrait;
     use ImageHelperTrait;
