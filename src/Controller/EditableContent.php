@@ -47,9 +47,6 @@ class EditableContent extends AbstractController {
 
     protected Config $config;
     protected User $user;
-    protected string $title;
-    protected bool $showEditor;
-    protected bool $showModificationDate;
 
 
     public function __construct(
