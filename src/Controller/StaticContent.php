@@ -32,8 +32,7 @@ class StaticContent extends AbstractController
 {
     public function __construct(
         protected string $template,
-        protected array $templateData = [],
-        protected string $title = ''
+        protected array $templateData = []
     )
     {
     }
@@ -41,14 +40,5 @@ class StaticContent extends AbstractController
     public function index(Request $request, ResponseEngine $responseEngine): Response
     {
         return $responseEngine->render($request, $this->templateData, $this->template);
-        /*
-        $email = $this->config->getVal('project', 'eMailWebMaster');
-        $content = new Content($this->template);
-        $content->assign('chairman', $this->getChairman());
-        $content->assign('mailaddr', (string)(new EMail($email, $email)));
-        $content->assign('title', $this->title);
-        $content->assign('pathId', $this->pathId);
-        $content->assignArray($this->templateData);
-        */
     }
 }
