@@ -28,7 +28,7 @@ use SFW2\Routing\AbstractController;
 
 use SFW2\Routing\ResponseEngine;
 
-class StaticContent extends AbstractController
+final class StaticContent extends AbstractController
 {
     public function __construct(
         protected string $template,
