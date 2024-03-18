@@ -22,15 +22,14 @@
 
 namespace SFW2\Content\Controller;
 
+use Psr\Http\Message\ResponseInterface as Response;
+use Psr\Http\Message\ServerRequestInterface as Request;
+use SFW2\Core\HttpExceptions\HttpInternalServerError;
+use SFW2\Core\HttpExceptions\HttpNotFound;
+use SFW2\Database\DatabaseInterface;
 use SFW2\Routing\AbstractController;
-use SFW2\Routing\Resolver\ResolverException;
-use SFW2\Routing\Result\Content;
-use SFW2\Routing\Result\Redirect;
-
-
-use SFW2\Controllers\Controller\Helper\DateTimeHelperTrait;
-use SFW2\Controllers\Controller\Helper\EMailHelperTrait;
-use SFW2\Controllers\Controller\Helper\ImageHelperTrait;
+use SFW2\Routing\HelperTraits\getRoutingDataTrait;
+use SFW2\Routing\ResponseEngine;
 
 use SFW2\Validator\Enumerations\ProtocolTypeEnum;
 use SFW2\Validator\Ruleset;
@@ -49,10 +48,6 @@ class Poster extends AbstractController {
     const DIMENSIONS = 800;
 
     use getRoutingDataTrait;
-    use DateTimeHelperTrait;
-    use EMailHelperTrait;
-    use ImageHelperTrait;
-
 
     public function __construct(
         protected DatabaseInterface $database,
@@ -61,10 +56,14 @@ class Poster extends AbstractController {
     {
     }
 
+    /**
+     * @throws HttpNotFound
+     */
     public function index(Request $request, ResponseEngine $responseEngine): Response
     {
-
-        $stmt =
+        $pathId = $this->getPathId($request);
+        $content = [];
+        $stmt = /** @lang MySQL */
             "SELECT `poster`.`Id`, `CreationDate`, `user`.`FirstName`, `user`.`LastName`, " .
             "`Email`, `FileName`, `Title`, `Link` " .
             "FROM `{TABLE_PREFIX}_poster` AS `poster` " .
